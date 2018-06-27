@@ -1,0 +1,217 @@
+.collpased.sidenav {
+  width: 50px;
+}
+
+.borderBox, .borderBox *, .dp-header-logo, .dp-header-logo * {
+  box-sizing: border-box
+}
+
+.dp-header-logo {
+  width: 200px;
+  height: 60px;
+  line-height: 60px;
+  background: #313d54;
+  border: 1px solid #313d54;
+  white-space: nowrap;
+  padding-left: 10px;
+  margin-bottom: 5px
+}
+
+.dp-header-logo--active {
+  cursor: pointer
+}
+
+.dp-header-logo > img {
+  width: 25px;
+  float: left;
+  margin-top: 15px
+}
+
+.dp-header-logo > span {
+  color: #fff;
+  font-size: 20px;
+  padding-left: 10px
+}
+
+.dp-header-logo .persona-name {
+  text-transform: uppercase;
+  font-size: 14px;
+  padding: 16px 0;
+  display: block;
+  width: 152px;
+  height: 60px;
+  word-wrap: break-word;
+  white-space: normal !important;
+  line-height: 1.2;
+  margin-left: 35px
+}
+
+.dp-header-logo .persona-name:after {
+  font-family: FontAwesome;
+  font-style: normal;
+  font-size: 15px;
+  content: "\F078";
+  margin-left: 10px;
+  display: inline-block;
+  color: #4aab52
+}
+
+.dp-header-logo .persona-drop-down-small {
+  display: none
+}
+
+.dp-header-logo .persona-drop-down-small:after {
+  font-family: FontAwesome;
+  font-style: normal;
+  font-size: 12px;
+  content: "\F078";
+  margin-left: 5px;
+  display: inline-block;
+  color: #4aab52;
+  position: absolute;
+  left: 28px;
+  top: -20px
+}
+
+.dp-header-logo.minimised {
+  width: 50px;
+  padding-left: 10px
+}
+
+.sidenav {
+  height: 100%;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  background: #323544;
+  overflow-x: hidden;
+  width: 200px
+}
+
+.sidenav .sidenav-item {
+  padding: 11px 5px 11px 20px;
+  font-size: 14px;
+  text-decoration: none;
+  font-weight: 400;
+  display: block;
+  -webkit-transition: .3s;
+  transition: .3s;
+  color: #b8bec4;
+  cursor: pointer;
+  white-space: nowrap
+}
+
+.sidenav .sidenav-item.active, .sidenav .sidenav-item:hover {
+  color: #fff;
+  background: #404351
+}
+
+.sidenav .sidenav-item i {
+  font-size: 16px;
+  margin-right: 8px
+}
+
+.sidenav .sidenav-item.active:before {
+  font-family: FontAwesome;
+  content: "\F0DA";
+  color: #4aab52;
+  margin-left: -20px;
+  font-size: 18px;
+  position: absolute
+}
+
+.collpased.sidenav {
+  width: 50px
+}
+
+.collpased .sidenav-item {
+  padding: 15px 15px 16px
+}
+
+.collpased .sidenav-item.active:before {
+  margin-left: -15px
+}
+
+.collpased .sidenav-item i {
+  font-size: 19px;
+  margin-right: 8px
+}
+
+.collpased .sidenav-item-name {
+  display: none
+}
+
+.collpased .dp-header-logo {
+  width: 50px;
+  padding-left: 10px
+}
+
+.collpased .persona-name {
+  display: none
+}
+
+.collpased .persona-drop-down-small {
+  display: block
+}
+
+.expander {
+  width: 100%;
+  background: #313d54;
+  height: 48px;
+  line-height: 48px;
+  text-align: center;
+  color: #3fae2a;
+  font-size: 16px;
+  cursor: pointer;
+  position: absolute;
+  left: 0;
+  bottom: 0
+}
+
+.suit-navigation {
+  position: absolute;
+  top: 60px;
+  left: 0;
+  margin: 0;
+  padding: 40px 40px 20px;
+  background: #fff;
+  box-shadow: 5px 5px 10px rgba(66, 66, 66, .3);
+  z-index: 100;
+  visibility: hidden;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: justify;
+  -ms-flex-pack: justify;
+  justify-content: space-between
+}
+
+.suit-navigation.showPersona {
+  visibility: visible
+}
+
+.suit-navigation > li {
+  display: inline-block;
+  cursor: pointer;
+  text-align: center
+}
+
+.suit-navigation > li .logo-wrapper {
+  background-color: #1491c1;
+  padding: 15px;
+  border-radius: 4px;
+  display: inline-block;
+  height: 72px
+}
+
+.suit-navigation > li .logo-wrapper + div {
+  text-align: center;
+  font-size: 14px;
+  padding-top: 5px;
+  text-overflow: ellipsis;
+  width: 80px;
+  white-space: nowrap;
+  overflow: hidden;
+  margin-bottom: 20px
+}

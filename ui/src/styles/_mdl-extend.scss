@@ -1,0 +1,63 @@
+/*!
+ *
+ *  * Copyright  (c) 2016-2017, Hortonworks Inc.  All rights reserved.
+ *  *
+ *  * Except as expressly permitted in a written agreement between you or your company
+ *  * and Hortonworks, Inc. or an authorized affiliate or partner thereof, any use,
+ *  * reproduction, modification, redistribution, sharing, lending or other exploitation
+ *  * of all or any part of the contents of this software is strictly prohibited.
+ *
+ */
+$left-spacing: 10px;
+$right-spacing: 10px;
+
+.left-spacing {
+  //@extend .mdl-layout-spacer;
+
+  width: $left-spacing;
+  max-width: $left-spacing;
+}
+
+.right-spacing {
+  //@extend .mdl-layout-spacer;
+
+  width: $right-spacing;
+  max-width: $right-spacing;
+}
+
+.mdl-chip.hive-table-chip {
+  height: 20px;
+  border-radius: 3px;
+  background: $shuttle-gray;
+  padding: 0px 8px;
+
+  .mdl-chip__text {
+    height: 20px;
+    line-height: 10px;
+    font-weight: 600;
+    color: $white;
+
+    &:before {
+      font-family: "FontAwesome";
+      font-style: normal;
+      font-size: 12px;
+      content: '\f0ce';
+      padding-right: 8px;
+    }
+  }
+}
+
+.mdl-menu__item {
+  height: 24px;
+  line-height: 24px;
+  display: block;
+  padding: 3px 20px;
+  line-height: 1.432;
+  color: #666;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.mdl-menu {
+  //padding: 0px;
+}

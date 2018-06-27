@@ -1,0 +1,52 @@
+/*!
+ *
+ *  * Copyright  (c) 2016-2017, Hortonworks Inc.  All rights reserved.
+ *  *
+ *  * Except as expressly permitted in a written agreement between you or your company
+ *  * and Hortonworks, Inc. or an authorized affiliate or partner thereof, any use,
+ *  * reproduction, modification, redistribution, sharing, lending or other exploitation
+ *  * of all or any part of the contents of this software is strictly prohibited.
+ *
+ */
+
+@mixin summary-pane($class-name, $width) {
+  .#{$class-name} {
+    ul {
+      list-style-type: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      overflow: hidden;
+      color: $dove-gray;
+      border: 1px solid $alto;
+    }
+
+    li {
+      float: left;
+      width: calc(#{$width} - 1px);
+      border-right: 1px solid $alto;
+      padding: 10px 20px;
+    }
+
+    li:last-child {
+      border-right: 0px;
+    }
+
+    li div {
+      display: block;
+      text-align: left;
+      text-decoration: none;
+      line-height: 1;
+    }
+
+    .title {
+      font-size: 12px;
+      margin-bottom: 5px;
+    }
+
+    .value {
+      font-size: 14px;
+      font-weight: 500;
+    }
+  }
+}

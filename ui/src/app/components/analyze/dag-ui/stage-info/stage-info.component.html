@@ -1,0 +1,75 @@
+<!--
+  ~
+  ~  CLOUDERA DATAPLANE SERVICE AND ITS CONSTITUENT SERVICES
+  ~
+  ~  (c) 2016-2018 Cloudera, Inc. All rights reserved.
+  ~
+  ~  This code is provided to you pursuant to your written agreement with Cloudera, which may be the terms of the
+  ~  Affero General Public License version 3 (AGPLv3), or pursuant to a written agreement with a third party authorized
+  ~  to distribute this code.  If you do not have a written agreement with Cloudera or with an authorized and
+  ~  properly licensed third party, you do not have any rights to this code.
+  ~
+  ~  If this code is provided to you under the terms of the AGPLv3:
+  ~  (A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY KIND;
+  ~  (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT
+  ~    LIMITED TO IMPLIED WARRANTIES OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE;
+  ~  (C) CLOUDERA IS NOT LIABLE TO YOU, AND WILL NOT DEFEND, INDEMNIFY, OR HOLD YOU HARMLESS FOR ANY CLAIMS ARISING
+  ~    FROM OR RELATED TO THE CODE; AND
+  ~  (D) WITH RESPECT TO YOUR EXERCISE OF ANY RIGHTS GRANTED TO YOU FOR THE CODE, CLOUDERA IS NOT LIABLE FOR ANY
+  ~    DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, PUNITIVE OR CONSEQUENTIAL DAMAGES INCLUDING, BUT NOT LIMITED TO,
+  ~    DAMAGES RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF BUSINESS ADVANTAGE OR UNAVAILABILITY,
+  ~    OR LOSS OR CORRUPTION OF DATA.
+  ~
+  -->
+
+<div *ngIf="!stageAnlaysis" class="mdl-dag__button close-button" (click)="closeInfo()">
+  <i class="fa fa-close"></i>
+</div>
+<button *ngIf="!stageAnlaysis && analysisState==='COMPLETED'" [routerLink]="['job-analysis/stage/', selectedStage.stage]"
+        class="btn mdl-color--hwx-white stage-analysis-button">
+  ANALYZE STAGE
+  <i class="fa fa-angle-right" aria-hidden="true"></i>
+</button>
+<div class="mdl-grid" #tabView>
+  <mat-tab-group animationDuration="0ms" (selectedTabChange)="selectedTabChangeHandler($event)">
+    <mat-tab label="Stage overview">
+      <div class="mdl-grid  mdl-color--white">
+        <div class="mdl-cell mdl-cell--1-2th-col">
+          <div class="info-label">Stage</div>
+          <h3 class="info-text">{{selectedStage.stage}}</h3>
+        </div>
+        <div class="mdl-cell mdl-cell--1-2th-col">
+          <div class="info-label">Duration</div>
+          <h3 class="info-text" [title]="'Duration: '+selectedStage.duration">
+            {{selectedStage.duration | lowercase}}</h3>
+        </div>
+        <div class="mdl-cell mdl-cell--1-2th-col">
+          <div class="info-label">Tasks</div>
+          <h3 class="info-text" [title]="'Tasks: '+selectedStage.numTasks">
+            {{selectedStage.numTasks}}</h3>
+        </div>
+        <div class="mdl-cell mdl-cell--1-2th-col">
+          <div class="info-label">Shuffle input</div>
+          <h3 class="info-text" [title]="'Shuffle input size: '+inputSize">{{inputSize}}</h3>
+        </div>
+        <div class="mdl-cell mdl-cell--1-2th-col">
+          <div class="info-label">Shuffle output</div>
+          <h3 class="info-text" [title]="'Shuffle output size: '+outputSize">{{outputSize}}</h3>
+        </div>
+        <div class="mdl-cell mdl-cell--1-2th-col">
+          <div class="info-label">External input</div>
+          <h3 class="info-text" [title]="'External input size: '+inputMetricReadSize">{{inputMetricReadSize}}</h3>
+        </div>
+        <div class="mdl-cell mdl-cell--1-2th-col">
+          <div class="info-label">External output</div>
+          <h3 class="info-text" [title]="'External output size: '+outputMetricWrittenSize">
+            {{outputMetricWrittenSize}}</h3>
+        </div>
+      </div>
+      <des-partition-info [stage]="selectedStage" [tabViewWidth]="tabViewWidth"></des-partition-info>
+    </mat-tab>
+    <mat-tab label="Sql plan">
+      <des-sql-plan class="sql-plan" id="sqlPlanFragment" #sqlPlanFragment [sqlPlanUpdates]="sqlPlanUpdates"></des-sql-plan>
+    </mat-tab>
+  </mat-tab-group>
+</div>

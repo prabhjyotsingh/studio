@@ -1,0 +1,275 @@
+/*!
+ *
+ *  CLOUDERA DATAPLANE SERVICE AND ITS CONSTITUENT SERVICES
+ *
+ *  (c) 2016-2018 Cloudera, Inc. All rights reserved.
+ *
+ *  This code is provided to you pursuant to your written agreement with Cloudera, which may be the terms of the
+ *  Affero General Public License version 3 (AGPLv3), or pursuant to a written agreement with a third party authorized
+ *  to distribute this code.  If you do not have a written agreement with Cloudera or with an authorized and
+ *  properly licensed third party, you do not have any rights to this code.
+ *
+ *  If this code is provided to you under the terms of the AGPLv3:
+ *  (A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY KIND;
+ *  (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT
+ *    LIMITED TO IMPLIED WARRANTIES OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE;
+ *  (C) CLOUDERA IS NOT LIABLE TO YOU, AND WILL NOT DEFEND, INDEMNIFY, OR HOLD YOU HARMLESS FOR ANY CLAIMS ARISING
+ *    FROM OR RELATED TO THE CODE; AND
+ *  (D) WITH RESPECT TO YOUR EXERCISE OF ANY RIGHTS GRANTED TO YOU FOR THE CODE, CLOUDERA IS NOT LIABLE FOR ANY
+ *    DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, PUNITIVE OR CONSEQUENTIAL DAMAGES INCLUDING, BUT NOT LIMITED TO,
+ *    DAMAGES RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF BUSINESS ADVANTAGE OR UNAVAILABILITY,
+ *    OR LOSS OR CORRUPTION OF DATA.
+ *
+ */
+
+@import '../../../../styles/general';
+
+.item-label {
+  fill: #000000;
+  font-size: 11px;
+}
+
+.zoom {
+  cursor: move;
+  fill: none;
+  pointer-events: all;
+}
+
+.lane-text {
+  font-size: 10px;
+  fill: #757575;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.lane-text.highlight {
+  font-weight: bold;
+}
+
+.dep-lines {
+  stroke-opacity: 0.3;
+}
+
+.edge {
+  fill: none;
+  stroke: #878787;
+}
+
+.edge:hover {
+  stroke: #3c3c3c;
+}
+
+.broadcast-edge {
+  fill: none;
+  stroke: #489400;
+  stroke-width: 2px;
+  stroke-dasharray: 2;
+}
+
+.broadcast-edge:hover {
+  stroke: #296000;
+}
+
+.brush-wrapper {
+  height: 40px;
+  margin-top: 0;
+}
+
+.brush-container > .brush {
+  fill: #f7f7f7;
+  stroke: #e7e7e7;
+}
+
+.x.brush > .selection {
+  fill: #b4b4b4;
+}
+
+.handle.handle--e, .handle.handle--w {
+  stroke: #b4b4b4;
+  height: 36px;
+  y: 3;
+  width: 6px;
+}
+
+.x1-axis text, .x2-axis text {
+  fill: #3c3c3c;
+}
+
+.x1-axis line, .x2-axis line, .x1-axis path {
+  stroke: #3c3c3c;
+}
+
+#swimlane {
+  overflow-x: hidden;
+  position: relative;
+  overflow-y: auto;
+  max-height: 250px;
+}
+
+#swimlane::-webkit-scrollbar {
+  -webkit-appearance: none;
+  width: 6px;
+}
+
+#swimlane::-webkit-scrollbar-thumb {
+  border-radius: 5px;
+  background-color: rgba(0, 0, 0, .5);
+  -webkit-box-shadow: 0 0 1px rgba(255, 255, 255, .5);
+  box-shadow: 0 0 1px rgba(255, 255, 255, .5);
+}
+
+#brush {
+  z-index: 1;
+  margin-top: -10px;
+  margin-left: 2px;
+}
+
+#xAxis {
+  position: relative;
+  height: 35px;
+}
+
+.x-axis-svg {
+  transform: translate(42px, 5px);
+}
+
+.axis--x .domain,
+.axis--grid .tick line {
+  stroke: transparent;
+}
+
+.axis--grid .tick--minor line {
+  stroke-opacity: .5;
+}
+
+.chart > .main {
+  transform: translate(42px, 0px);
+}
+
+.brush-container {
+  transform: translate(40px, 0);
+}
+
+.item.status-failed {
+  fill: #ff91af;
+}
+
+.alert-circle {
+  cursor: pointer;
+}
+
+.alert-circle:hover {
+  opacity: 1;
+}
+
+.legend-text {
+  font-size: 13px;
+}
+
+.grid line {
+  shape-rendering: crispEdges;
+  stroke: lightgrey;
+  stroke-opacity: 0.5;
+  stroke-dasharray: 4;
+}
+
+.grid path {
+  stroke-width: 0;
+}
+
+.mdl-padded__container {
+  padding: 0 10px 0 10px;
+  position: relative;
+}
+
+.dag-header {
+  position: absolute;
+  top: -5px;
+  left: 15px;
+}
+
+.dag-title {
+  @extend .base-title;
+  display: inline-block;
+}
+
+.sort-container {
+  margin-left: 25px;
+  display: inline-block;
+}
+
+.sort-container > button {
+  font-size: 12px;
+  text-transform: none;
+  color: #757575;
+  padding: 0;
+}
+
+.sort-option {
+  height: 30px !important;
+  line-height: 30px !important;
+}
+
+.sort-option span {
+  font-size: 12px;
+  color: #757575;
+  cursor: pointer;
+  line-height: 27px;
+}
+
+.sort-option span i {
+  float: right;
+  line-height: 30px;
+  color: lightgrey;
+  margin-right: 2px;
+}
+
+.sort-option span i.active {
+  color: #757575;
+  margin-right: 0px;
+}
+
+.mdl-dag__button {
+  position: absolute;
+  right: 15px;
+  top: 20px;
+}
+
+.mdl-sticky-top {
+  position: sticky;
+  top: 0;
+  z-index: 999;
+  background-color: #f5f5f5;
+}
+
+.edge-tooltip {
+  padding: 5px;
+
+  & > div {
+    font-size: 12px;
+    text-align: left;
+  }
+}
+
+.brush-fixed-pos {
+  position: fixed;
+  top: 134px;
+  z-index: 100;
+  background-color: #f5f5f5;
+  overflow: hidden;
+}
+
+.m-t-55 {
+  margin-top: 55px;
+}
+
+.external-data-icon:hover {
+  opacity: 1;
+}
+
+.stage-api-error {
+  position: relative;
+  margin-top: 28px;
+  padding-left: 10px;
+  padding-right: 10px;
+}

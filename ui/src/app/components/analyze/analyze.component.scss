@@ -1,0 +1,255 @@
+/*!
+ *
+ *  CLOUDERA DATAPLANE SERVICE AND ITS CONSTITUENT SERVICES
+ *
+ *  (c) 2016-2018 Cloudera, Inc. All rights reserved.
+ *
+ *  This code is provided to you pursuant to your written agreement with Cloudera, which may be the terms of the
+ *  Affero General Public License version 3 (AGPLv3), or pursuant to a written agreement with a third party authorized
+ *  to distribute this code.  If you do not have a written agreement with Cloudera or with an authorized and
+ *  properly licensed third party, you do not have any rights to this code.
+ *
+ *  If this code is provided to you under the terms of the AGPLv3:
+ *  (A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY KIND;
+ *  (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT
+ *    LIMITED TO IMPLIED WARRANTIES OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE;
+ *  (C) CLOUDERA IS NOT LIABLE TO YOU, AND WILL NOT DEFEND, INDEMNIFY, OR HOLD YOU HARMLESS FOR ANY CLAIMS ARISING
+ *    FROM OR RELATED TO THE CODE; AND
+ *  (D) WITH RESPECT TO YOUR EXERCISE OF ANY RIGHTS GRANTED TO YOU FOR THE CODE, CLOUDERA IS NOT LIABLE FOR ANY
+ *    DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, PUNITIVE OR CONSEQUENTIAL DAMAGES INCLUDING, BUT NOT LIMITED TO,
+ *    DAMAGES RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF BUSINESS ADVANTAGE OR UNAVAILABILITY,
+ *    OR LOSS OR CORRUPTION OF DATA.
+ *
+ */
+
+ @import '../../../styles/general';
+
+.mdl-linechart--adjustment {
+  position: relative;
+  padding: 0 8px;
+  .mdl-cell {
+    margin: 0 8px;
+    padding-top: 8px;
+  }
+
+  .mdl-linechart__button {
+    position: absolute;
+    top: 5px;
+    right: 15px;
+  }
+}
+
+.mdl-form-search {
+  position: relative;
+  margin: 5px 0;
+  &:after {
+    font-family: FontAwesome;
+    content: "\f002";
+    position: absolute;
+    font-size: 11px;
+    right: 30px;
+    color: #aaafbb;
+    top: calc(50% - 7px);
+  }
+  .mdl-form__control {
+    font-size: 14px;
+    margin: auto;
+    display: flex;
+    width: 100%;
+    line-height: 35;
+    height: 35px;
+    padding-left: 10px;
+
+    ::-webkit-input-placeholder {
+      color: #aaafbb;
+    }
+
+    :-moz-placeholder {
+      color: #aaafbb;
+    }
+
+    ::-moz-placeholder {
+      color: #aaafbb;
+    }
+
+    :-ms-input-placeholder {
+      color: #aaafbb;
+    }
+
+  }
+}
+
+.mdl-menu {
+  .mdl-form__control {
+    width: calc(100% - 50px);
+  }
+}
+
+.mdl-customizer__menu {
+  padding: 0;
+  margin: 0 0 10px 0;
+  max-height: 180px;
+  overflow-y: auto;
+  li {
+    &.mdl-customizer--menu__item {
+      min-width: 200px;
+      color: #777;
+      height: 35px;
+      line-height: 35px;
+      position: relative;
+      height: 24px;
+      display: block;
+      padding: 3px 20px;
+      line-height: 1.432;
+      white-space: nowrap;
+      cursor: pointer;
+      border: none;
+      text-align: left;
+      margin: 0;
+      outline-color: rgb(189, 189, 189);
+      overflow: hidden;
+      font-size: 14px;
+      font-weight: 400;
+      letter-spacing: 0;
+      text-decoration: none;
+      cursor: pointer;
+      transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      &:hover {
+        color: white;
+        background-color: #818691;
+        .fa {
+          color: white;
+        }
+        a {
+          color: white;
+        }
+      }
+      &.disabled {
+        cursor: default;
+        font-style: italic;
+        font-size: 12px;
+      }
+      &.disabled:hover {
+        background-color: white;
+        color: #777;
+      }
+    }
+  }
+}
+
+.mdl-customizer--menu__item_title {
+  font-size: 14px;
+  font-weight: bold;
+  text-align: left;
+  padding: 0 10px 3px 10px;
+  margin-bottom: 5px;
+  border-bottom: 1px solid #f5f5f5;
+  line-height: 24px;
+  letter-spacing: 0;
+}
+
+li.view_menu_item {
+  border-bottom: 1px solid #f5f5f5 !important;
+}
+
+li.view_menu_item a.mdl-navigation__link {
+  font-weight: bold;
+  width: 100%;
+  display: block;
+}
+
+.mdl-customizer__button ~ .mdl-menu__container {
+  transform: translate(-16px, 1px);
+}
+
+.mdl-dag--adjustment {
+  padding-top: 0;
+  &.mdl-cell {
+    margin-top: 0;
+  }
+}
+
+.mdl-dag {
+  z-index: 998 !important;
+}
+
+.mdl-sticky-top-dag {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: #f5f5f5;
+}
+
+.mdl-sticky-top-chart {
+  position: sticky;
+  top: 0;
+  z-index: 998;
+  background-color: #f5f5f5;
+  -webkit-transition: all 0.3s ease;
+  -moz-transition: all 0.3s ease;
+  -o-transition: all 0.3s ease;
+  transition: all 0.3s ease;
+}
+
+.query-explain-heading {
+  text-transform: uppercase;
+  color: #757575;
+  font-size: 13px;
+  float: left;
+}
+
+.mdl-linechart--adjustment .mdl-color--white {
+  border-radius: 0;
+}
+
+.mdl-linechart--adjustment:first-child .mdl-color--white {
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+}
+
+.mdl-linechart--adjustment:last-child .mdl-color--white {
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+
+.menu-bar button {
+  margin-left: 10px;
+}
+
+.chart-display-control {
+  position: absolute;
+  right: 35px;
+  z-index: 1;
+}
+
+.mat-checkbox-layout .mat-checkbox-label {
+  font-size: 14px;
+}
+
+.run_analysis_menu {
+  width: 150px;
+}
+
+.run_analysis_menu i {
+  padding-left: 8px;
+  cursor: pointer;
+  line-height: 48px;
+  float: left;
+}
+
+.run_analysis_menu button {
+  width: 80%;
+  float: left;
+}
+
+.btn-full-width {
+ width: 100% !important;
+}
+
+.analysis_failed_message {
+  white-space: pre-wrap;
+}

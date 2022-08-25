@@ -1,0 +1,65 @@
+<!--
+  ~
+  ~  CLOUDERA DATAPLANE SERVICE AND ITS CONSTITUENT SERVICES
+  ~
+  ~  (c) 2016-2018 Cloudera, Inc. All rights reserved.
+  ~
+  ~  This code is provided to you pursuant to your written agreement with Cloudera, which may be the terms of the
+  ~  Affero General Public License version 3 (AGPLv3), or pursuant to a written agreement with a third party authorized
+  ~  to distribute this code.  If you do not have a written agreement with Cloudera or with an authorized and
+  ~  properly licensed third party, you do not have any rights to this code.
+  ~
+  ~  If this code is provided to you under the terms of the AGPLv3:
+  ~  (A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY KIND;
+  ~  (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT
+  ~    LIMITED TO IMPLIED WARRANTIES OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE;
+  ~  (C) CLOUDERA IS NOT LIABLE TO YOU, AND WILL NOT DEFEND, INDEMNIFY, OR HOLD YOU HARMLESS FOR ANY CLAIMS ARISING
+  ~    FROM OR RELATED TO THE CODE; AND
+  ~  (D) WITH RESPECT TO YOUR EXERCISE OF ANY RIGHTS GRANTED TO YOU FOR THE CODE, CLOUDERA IS NOT LIABLE FOR ANY
+  ~    DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, PUNITIVE OR CONSEQUENTIAL DAMAGES INCLUDING, BUT NOT LIMITED TO,
+  ~    DAMAGES RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF BUSINESS ADVANTAGE OR UNAVAILABILITY,
+  ~    OR LOSS OR CORRUPTION OF DATA.
+  ~
+  -->
+
+<div class="mdl-cell mdl-cell--12-col mdl-cell--12-col-tablet">
+  <h5 class="base-caption">Outlier tasks({{dataSource.data.length}})</h5>
+
+  <table mat-table matSort [dataSource]="dataSource" class="mat-elevation-z0 data-table inner-table">
+    <ng-container matColumnDef="show">
+      <th mat-header-cell *matHeaderCellDef> Show </th>
+      <td mat-cell *matCellDef="let element">
+        <a (click)="selectOutlierTasks(element)"><i
+          [ngClass]="{'fa-check-square': element.show, 'fa-square-o': !element.show}"
+          class="fa"></i></a>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="anomalyType">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header> Anomaly type</th>
+      <td mat-cell *matCellDef="let element"> {{element.anomalyType}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="taskId">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header> Task id </th>
+      <td mat-cell *matCellDef="let element"> {{element.taskId}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="executorId">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header> Executor id </th>
+      <td mat-cell *matCellDef="let element"> {{element.executorId}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="successful">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header> Status </th>
+      <td mat-cell *matCellDef="let element">
+        <i class="fa" ngClass="{{element.successful ? 'fa-check-circle' : 'fa-times-circle'}}" aria-hidden="true"></i>
+        {{element.successful?'successful':'failed'}} </td>
+    </ng-container>
+
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+  </table>
+  <mat-paginator [pageSizeOptions]="[10, 25, 50]" showFirstLastButtons></mat-paginator>
+</div>

@@ -1,0 +1,936 @@
+{
+  "JVM Information": {
+    "Scala Version": [
+      "version 2.11.8"
+    ],
+    "Java Home": [
+      "/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.161-2.b14.el7.x86_64/jre"
+    ],
+    "Java Version": [
+      "1.8.0_161 (Oracle Corporation)"
+    ]
+  },
+  "Spark Properties": {
+    "spark.shuffle.io.serverThreads": [
+      "128"
+    ],
+    "spark.submit.pyFiles": [
+      "file:/usr/hdp/current/spark2-client/python/lib/pyspark.zip,file:/usr/hdp/current/spark2-client/python/lib/py4j-0.10.7-src.zip"
+    ],
+    "spark.executor.extraClassPath": [
+      "./honest-profiler.zip/honest-profiler.jar"
+    ],
+    "spark.executor.extraLibraryPath": [
+      "/usr/hdp/current/hadoop-client/lib/native:/usr/hdp/current/hadoop-client/lib/native/Linux-amd64-64"
+    ],
+    "spark.history.kerberos.principal": [
+      "none"
+    ],
+    "spark.history.fs.cleaner.interval": [
+      "7d"
+    ],
+    "spark.history.provider": [
+      "org.apache.spark.deploy.history.FsHistoryProvider"
+    ],
+    "spark.history.fs.cleaner.enabled": [
+      "true"
+    ],
+    "spark.repl.class.outputDir": [
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/tmp/spark1361087983752267151"
+    ],
+    "spark.history.fs.cleaner.maxAge": [
+      "90d"
+    ],
+    "spark.sql.orc.impl": [
+      "native"
+    ],
+    "spark.sql.statistics.fallBackToHdfs": [
+      "true"
+    ],
+    "spark.dynamicAllocation.minExecutors": [
+      "0"
+    ],
+    "spark.yarn.historyServer.address": [
+      "ctr-e139-1542663976389-22387-01-000003.hwx.site:18081"
+    ],
+    "spark.shuffle.unsafe.file.output.buffer": [
+      "5m"
+    ],
+    "spark.yarn.secondary.jars": [
+      "netty-all-4.1.17.Final.jar,livy-api-0.5.0.3.1.0.0-61.jar,livy-rsc-0.5.0.3.1.0.0-61.jar,commons-codec-1.9.jar,livy-core_2.11-0.5.0.3.1.0.0-61.jar,livy-repl_2.11-0.5.0.3.1.0.0-61.jar,datanucleus-api-jdo-3.2.6.jar,datanucleus-core-3.2.10.jar,datanucleus-rdbms-3.2.9.jar"
+    ],
+    "spark.history.fs.logDirectory": [
+      "hdfs:///spark2-history/"
+    ],
+    "spark.yarn.queue": [
+      "default"
+    ],
+    "spark.org.apache.hadoop.yarn.server.webproxy.amfilter.AmIpFilter.param.RM_HA_URLS": [
+      "ctr-e139-1542663976389-22387-01-000003.hwx.site:8088,ctr-e139-1542663976389-22387-01-000004.hwx.site:8088"
+    ],
+    "spark.sql.warehouse.dir": [
+      "/apps/spark/warehouse"
+    ],
+    "spark.master": [
+      "yarn"
+    ],
+    "spark.executor.heartbeatInterval": [
+      "1s"
+    ],
+    "spark.driver.extraLibraryPath": [
+      "/usr/hdp/current/hadoop-client/lib/native:/usr/hdp/current/hadoop-client/lib/native/Linux-amd64-64"
+    ],
+    "spark.yarn.dist.archives": [
+      "file:/usr/hdp/current/spark2-client/R/lib/sparkr.zip#sparkr,hdfs://mycluster/hdp/apps/3.0.1.0-150/spark-perf-monitoring/honest-profiler.zip"
+    ],
+    "spark.yarn.maxAppAttempts": [
+      "1"
+    ],
+    "spark.app.name": [
+      "livy-session-88"
+    ],
+    "spark.ui.port": [
+      "0"
+    ],
+    "spark.sql.hive.convertMetastoreOrc": [
+      "true"
+    ],
+    "spark.speculation": [
+      "true"
+    ],
+    "spark.org.apache.hadoop.yarn.server.webproxy.amfilter.AmIpFilter.param.PROXY_HOSTS": [
+      "ctr-e139-1542663976389-22387-01-000003.hwx.site,ctr-e139-1542663976389-22387-01-000004.hwx.site"
+    ],
+    "spark.repl.class.uri": [
+      "spark://ctr-e139-1542663976389-22387-01-000007.hwx.site:46877/classes"
+    ],
+    "spark.sql.orc.filterPushdown": [
+      "true"
+    ],
+    "spark.driver.host": [
+      "ctr-e139-1542663976389-22387-01-000007.hwx.site"
+    ],
+    "spark.shuffle.io.backLog": [
+      "8192"
+    ],
+    "spark.app.id": [
+      "application_1543876392892_0246"
+    ],
+    "spark.sql.hive.metastore.version": [
+      "3.0"
+    ],
+    "spark.history.ui.port": [
+      "18081"
+    ],
+    "spark.ui.filters": [
+      "org.apache.hadoop.yarn.server.webproxy.amfilter.AmIpFilter"
+    ],
+    "spark.dynamicAllocation.enabled": [
+      "true"
+    ],
+    "spark.driver.extraJavaOptions": [
+      "-javaagent:./monitoring-assembly-agent-0.0.1-SNAPSHOT.jar -DMonitoringAgent.LOG_INFO\u003dtrue -agentpath:./honest-profiler.zip/liblagent.so\u003dstart\u003d0 -DProcessMonitor.threadStateSnapshotProvider\u003dcom.cloudera.safari.spark.monitoring.utils.system.snapshot.thread.HonestProfilerBasedThreadSnapshotProvider -Dhdp.vm.sampling.duration\u003d2500 -DDesEventHandler.AGGREGATION_DURATION_MS\u003d2500"
+    ],
+    "spark.unsafe.sorter.spill.reader.buffer.size": [
+      "1m"
+    ],
+    "spark.driver.port": [
+      "46877"
+    ],
+    "spark.executorEnv.PYTHONPATH": [
+      "{{PWD}}/pyspark.zip\u003cCPS\u003e{{PWD}}/py4j-0.10.7-src.zip\u003cCPS\u003e{{PWD}}/pyspark.zip\u003cCPS\u003e{{PWD}}/py4j-0.10.7-src.zip"
+    ],
+    "spark.org.apache.hadoop.yarn.server.webproxy.amfilter.AmIpFilter.param.PROXY_URI_BASES": [
+      "http://ctr-e139-1542663976389-22387-01-000003.hwx.site:8088/proxy/application_1543876392892_0246,http://ctr-e139-1542663976389-22387-01-000004.hwx.site:8088/proxy/application_1543876392892_0246"
+    ],
+    "spark.sql.catalogImplementation": [
+      "hive"
+    ],
+    "spark.yarn.dist.files": [
+      "hdfs://mycluster/hdp/apps/3.0.1.0-150/spark-perf-monitoring/monitoring-assembly-agent-0.0.1-SNAPSHOT.jar,file:///etc/spark2/3.1.0.0-61/0/hive-site.xml"
+    ],
+    "spark.driver.extraClassPath": [
+      "./honest-profiler.zip/honest-profiler.jar"
+    ],
+    "spark.yarn.app.container.log.dir": [
+      "/grid/0/hadoop/yarn/log/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001"
+    ],
+    "spark.yarn.dist.jars": [
+      "file:///usr/hdp/current/livy2-server/rsc-jars/netty-all-4.1.17.Final.jar,file:///usr/hdp/current/livy2-server/rsc-jars/livy-api-0.5.0.3.1.0.0-61.jar,file:///usr/hdp/current/livy2-server/rsc-jars/livy-rsc-0.5.0.3.1.0.0-61.jar,file:///usr/hdp/current/livy2-server/repl_2.11-jars/commons-codec-1.9.jar,file:///usr/hdp/current/livy2-server/repl_2.11-jars/livy-core_2.11-0.5.0.3.1.0.0-61.jar,file:///usr/hdp/current/livy2-server/repl_2.11-jars/livy-repl_2.11-0.5.0.3.1.0.0-61.jar,file:///usr/hdp/current/spark2-client/jars/datanucleus-api-jdo-3.2.6.jar,file:///usr/hdp/current/spark2-client/jars/datanucleus-core-3.2.10.jar,file:///usr/hdp/current/spark2-client/jars/datanucleus-rdbms-3.2.9.jar"
+    ],
+    "spark.eventLog.dir": [
+      "hdfs:///spark2-history/"
+    ],
+    "spark.dynamicAllocation.initialExecutors": [
+      "1"
+    ],
+    "spark.livy.spark_major_version": [
+      "2"
+    ],
+    "spark.history.kerberos.keytab": [
+      "none"
+    ],
+    "spark.yarn.isPython": [
+      "true"
+    ],
+    "spark.executor.id": [
+      "driver"
+    ],
+    "spark.submit.deployMode": [
+      "cluster"
+    ],
+    "spark.yarn.submit.waitAppCompletion": [
+      "false"
+    ],
+    "spark.dynamicAllocation.maxExecutors": [
+      "50"
+    ],
+    "spark.io.compression.lz4.blockSize": [
+      "128kb"
+    ],
+    "spark.yarn.tags": [
+      "livy-session-88-oZDj74Ty"
+    ],
+    "spark.sql.autoBroadcastJoinThreshold": [
+      "26214400"
+    ],
+    "spark.scheduler.mode": [
+      "FIFO"
+    ],
+    "spark.eventLog.enabled": [
+      "true"
+    ],
+    "spark.history.store.path": [
+      "/var/lib/spark2/shs_db"
+    ],
+    "spark.shuffle.file.buffer": [
+      "1m"
+    ],
+    "spark.sql.hive.metastore.jars": [
+      "/usr/hdp/current/spark2-client/standalone-metastore/*"
+    ],
+    "spark.yarn.max.executor.failures": [
+      "50"
+    ],
+    "spark.shuffle.service.enabled": [
+      "true"
+    ],
+    "spark.executor.extraJavaOptions": [
+      "-javaagent:./monitoring-assembly-agent-0.0.1-SNAPSHOT.jar -DMonitoringAgent.LOG_INFO\u003dtrue -agentpath:./honest-profiler.zip/liblagent.so\u003dstart\u003d0 -DProcessMonitor.threadStateSnapshotProvider\u003dcom.cloudera.safari.spark.monitoring.utils.system.snapshot.thread.HonestProfilerBasedThreadSnapshotProvider -Dhdp.vm.sampling.duration\u003d2500 -DDesEventHandler.AGGREGATION_DURATION_MS\u003d2500"
+    ],
+    "spark.yarn.app.id": [
+      "application_1543876392892_0246"
+    ],
+    "spark.yarn.dist.pyFiles": [
+      "file:///usr/hdp/current/spark2-client/python/lib/pyspark.zip,file:///usr/hdp/current/spark2-client/python/lib/py4j-0.10.7-src.zip"
+    ]
+  },
+  "Classpath Entries": {
+    "System Classpath": [
+      "./honest-profiler.zip/honest-profiler.jar",
+      "./monitoring-assembly-agent-0.0.1-SNAPSHOT.jar",
+      "/etc/hadoop/conf/secure",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_conf__",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_conf__/__hadoop_conf__",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/HikariCP-java7-2.4.12.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/JavaEWAH-0.3.2.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/RoaringBitmap-0.5.11.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/ST4-4.0.4.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/accessors-smart-1.2.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/activation-1.1.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/aircompressor-0.8.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/antlr-2.7.7.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/antlr-runtime-3.4.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/antlr4-runtime-4.7.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/aopalliance-1.0.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/aopalliance-repackaged-2.4.0-b34.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/apache-log4j-extras-1.2.17.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/arpack_combined_all-0.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/arrow-format-0.8.0.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/arrow-memory-0.8.0.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/arrow-vector-0.8.0.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/avro-1.7.7.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/avro-ipc-1.7.7.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/avro-mapred-1.7.7-hadoop2.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/aws-java-sdk-bundle-1.11.271.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/azure-data-lake-store-sdk-2.2.7.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/azure-keyvault-core-1.0.0.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/azure-storage-7.0.0.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/bonecp-0.8.0.RELEASE.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/breeze-macros_2.11-0.13.2.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/breeze_2.11-0.13.2.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/calcite-avatica-1.2.0-incubating.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/calcite-core-1.2.0-incubating.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/calcite-linq4j-1.2.0-incubating.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/chill-java-0.8.4.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/chill_2.11-0.8.4.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/commons-beanutils-1.9.3.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/commons-cli-1.2.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/commons-codec-1.10.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/commons-collections-3.2.2.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/commons-compiler-3.0.8.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/commons-compress-1.4.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/commons-configuration2-2.1.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/commons-crypto-1.0.0.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/commons-daemon-1.0.13.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/commons-dbcp-1.4.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/commons-httpclient-3.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/commons-io-2.4.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/commons-lang-2.6.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/commons-lang3-3.5.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/commons-logging-1.1.3.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/commons-math3-3.4.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/commons-net-2.2.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/commons-pool-1.5.4.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/compress-lzf-1.0.3.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/core-1.1.2.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/curator-client-2.12.0.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/curator-framework-2.12.0.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/curator-recipes-2.12.0.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/datanucleus-api-jdo-3.2.6.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/datanucleus-core-3.2.10.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/datanucleus-rdbms-3.2.9.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/derby-10.12.1.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/dnsjava-2.1.7.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/ehcache-3.3.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/eigenbase-properties-1.1.5.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/flatbuffers-1.2.0-3f79e055.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/flogger-0.3.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/flogger-log4j-backend-0.3.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/flogger-system-backend-0.3.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/gcs-connector-1.9.10.3.1.0.0-61-shaded.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/geronimo-jcache_1.0_spec-1.0-alpha-1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/google-extensions-0.3.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/gson-2.2.4.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/guava-14.0.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/guice-4.0.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/guice-servlet-4.0.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/hadoop-annotations-3.1.1.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/hadoop-auth-3.1.1.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/hadoop-aws-3.1.1.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/hadoop-azure-3.1.1.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/hadoop-azure-datalake-3.1.1.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/hadoop-client-3.1.1.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/hadoop-cloud-storage-3.1.1.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/hadoop-common-3.1.1.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/hadoop-hdfs-client-3.1.1.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/hadoop-mapreduce-client-common-3.1.1.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/hadoop-mapreduce-client-core-3.1.1.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/hadoop-mapreduce-client-jobclient-3.1.1.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/hadoop-openstack-3.1.1.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/hadoop-yarn-api-3.1.1.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/hadoop-yarn-client-3.1.1.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/hadoop-yarn-common-3.1.1.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/hadoop-yarn-registry-3.1.1.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/hadoop-yarn-server-common-3.1.1.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/hadoop-yarn-server-web-proxy-3.1.1.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/hive-beeline-1.21.2.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/hive-cli-1.21.2.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/hive-exec-1.21.2.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/hive-jdbc-1.21.2.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/hive-metastore-1.21.2.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/hk2-api-2.4.0-b34.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/hk2-locator-2.4.0-b34.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/hk2-utils-2.4.0-b34.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/hppc-0.7.2.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/htrace-core4-4.1.0-incubating.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/httpclient-4.5.4.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/httpcore-4.4.8.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/ivy-2.4.0.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/jackson-annotations-2.9.6.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/jackson-core-2.9.6.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/jackson-core-asl-1.9.13.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/jackson-databind-2.9.6.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/jackson-dataformat-cbor-2.9.6.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/jackson-jaxrs-base-2.9.5.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/jackson-jaxrs-json-provider-2.9.5.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/jackson-mapper-asl-1.9.13.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/jackson-module-jaxb-annotations-2.9.6.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/jackson-module-paranamer-2.9.6.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/jackson-module-scala_2.11-2.9.6.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/janino-3.0.8.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/javassist-3.18.1-GA.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/javax.annotation-api-1.2.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/javax.inject-1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/javax.inject-2.4.0-b34.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/javax.servlet-api-3.1.0.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/javax.ws.rs-api-2.0.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/javolution-5.5.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/jaxb-api-2.2.11.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/jcip-annotations-1.0-1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/jcl-over-slf4j-1.7.16.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/jdo-api-3.0.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/jersey-client-2.22.2.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/jersey-common-2.22.2.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/jersey-container-servlet-2.22.2.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/jersey-container-servlet-core-2.22.2.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/jersey-guava-2.22.2.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/jersey-media-jaxb-2.22.2.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/jersey-server-2.22.2.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/jetty-util-9.3.24.v20180605.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/jetty-util-ajax-9.3.24.v20180605.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/jetty-webapp-9.3.24.v20180605.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/jetty-xml-9.3.24.v20180605.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/jline-2.12.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/joda-time-2.9.3.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/jodd-core-3.5.2.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/jpam-1.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/json-smart-2.3.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/json4s-ast_2.11-3.2.11.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/json4s-core_2.11-3.2.11.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/json4s-jackson_2.11-3.2.11.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/jsp-api-2.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/jsr305-1.3.9.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/jta-1.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/jtransforms-2.4.0.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/jul-to-slf4j-1.7.16.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/kerb-admin-1.0.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/kerb-client-1.0.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/kerb-common-1.0.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/kerb-core-1.0.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/kerb-crypto-1.0.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/kerb-identity-1.0.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/kerb-server-1.0.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/kerb-simplekdc-1.0.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/kerb-util-1.0.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/kerby-asn1-1.0.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/kerby-config-1.0.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/kerby-pkix-1.0.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/kerby-util-1.0.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/kerby-xdr-1.0.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/kryo-shaded-3.0.3.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/leveldbjni-all-1.8.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/libfb303-0.9.3.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/libthrift-0.9.3.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/log4j-1.2.17.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/lz4-java-1.4.0.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/machinist_2.11-0.6.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/macro-compat_2.11-1.1.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/metrics-core-3.1.5.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/metrics-graphite-3.1.5.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/metrics-json-3.1.5.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/metrics-jvm-3.1.5.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/minlog-1.3.0.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/mssql-jdbc-6.2.1.jre7.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/netty-3.9.9.Final.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/netty-all-4.1.17.Final.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/nimbus-jose-jwt-4.41.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/objenesis-2.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/okhttp-2.7.5.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/okio-1.6.0.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/opencsv-2.3.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/orc-core-1.4.4-nohive.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/orc-mapreduce-1.4.4-nohive.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/oro-2.0.8.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/osgi-resource-locator-1.0.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/paranamer-2.8.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/parquet-column-1.8.3.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/parquet-common-1.8.3.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/parquet-encoding-1.8.3.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/parquet-format-2.3.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/parquet-hadoop-1.8.3.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/parquet-hadoop-bundle-1.6.0.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/parquet-jackson-1.8.3.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/protobuf-java-2.5.0.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/py4j-0.10.7.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/pyrolite-4.13.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/re2j-1.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/scala-compiler-2.11.8.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/scala-library-2.11.8.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/scala-parser-combinators_2.11-1.0.4.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/scala-reflect-2.11.8.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/scala-xml_2.11-1.0.5.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/scalap-2.11.8.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/shapeless_2.11-2.3.2.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/slf4j-api-1.7.16.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/slf4j-log4j12-1.7.16.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/snappy-0.2.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/snappy-java-1.1.2.6.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/spark-catalyst_2.11-2.3.2.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/spark-core_2.11-2.3.2.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/spark-graphx_2.11-2.3.2.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/spark-hadoop-cloud_2.11-2.3.2.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/spark-hive-thriftserver_2.11-2.3.2.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/spark-hive_2.11-2.3.2.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/spark-kvstore_2.11-2.3.2.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/spark-launcher_2.11-2.3.2.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/spark-mllib-local_2.11-2.3.2.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/spark-mllib_2.11-2.3.2.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/spark-network-common_2.11-2.3.2.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/spark-network-shuffle_2.11-2.3.2.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/spark-repl_2.11-2.3.2.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/spark-sketch_2.11-2.3.2.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/spark-sql_2.11-2.3.2.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/spark-streaming_2.11-2.3.2.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/spark-tags_2.11-2.3.2.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/spark-unsafe_2.11-2.3.2.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/spark-yarn_2.11-2.3.2.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/spire-macros_2.11-0.13.0.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/spire_2.11-0.13.0.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/stax-api-1.0.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/stax2-api-3.1.4.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/stream-2.7.0.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/stringtemplate-3.2.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/super-csv-2.2.0.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/token-provider-1.0.1.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/univocity-parsers-2.5.9.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/validation-api-1.1.0.Final.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/wildfly-openssl-1.0.4.Final.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/woodstox-core-5.0.3.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/xbean-asm5-shaded-4.4.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/xz-1.0.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/zookeeper-3.4.6.3.1.0.0-61.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_libs__/zstd-jni-1.3.2-2.jar",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/mr-framework/hadoop/share/hadoop/common/*",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/mr-framework/hadoop/share/hadoop/common/lib/*",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/mr-framework/hadoop/share/hadoop/hdfs/*",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/mr-framework/hadoop/share/hadoop/hdfs/lib/*",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/mr-framework/hadoop/share/hadoop/mapreduce/*",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/mr-framework/hadoop/share/hadoop/mapreduce/lib/*",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/mr-framework/hadoop/share/hadoop/tools/lib/*",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/mr-framework/hadoop/share/hadoop/yarn/*",
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/mr-framework/hadoop/share/hadoop/yarn/lib/*",
+      "/usr/hdp/3.1.0.0-61/hadoop/azure-data-lake-store-sdk-2.2.7.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/azure-keyvault-core-1.0.0.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/azure-storage-7.0.0.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/conf",
+      "/usr/hdp/3.1.0.0-61/hadoop/hadoop-annotations-3.1.1.3.1.0.0-61.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/hadoop-annotations.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/hadoop-auth-3.1.1.3.1.0.0-61.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/hadoop-auth.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/hadoop-azure-3.1.1.3.1.0.0-61.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/hadoop-azure-datalake-3.1.1.3.1.0.0-61.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/hadoop-azure-datalake.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/hadoop-azure.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/hadoop-common-3.1.1.3.1.0.0-61-tests.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/hadoop-common-3.1.1.3.1.0.0-61.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/hadoop-common-tests.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/hadoop-common.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/hadoop-kms-3.1.1.3.1.0.0-61.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/hadoop-kms.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/hadoop-nfs-3.1.1.3.1.0.0-61.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/hadoop-nfs.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/accessors-smart-1.2.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/asm-5.0.4.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/avro-1.7.7.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/commons-beanutils-1.9.3.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/commons-cli-1.2.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/commons-codec-1.11.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/commons-collections-3.2.2.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/commons-compress-1.4.1.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/commons-configuration2-2.1.1.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/commons-io-2.5.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/commons-lang-2.6.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/commons-lang3-3.4.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/commons-logging-1.1.3.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/commons-math3-3.1.1.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/commons-net-3.6.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/curator-client-2.12.0.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/curator-framework-2.12.0.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/curator-recipes-2.12.0.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/gson-2.2.4.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/guava-11.0.2.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/hadoop-lzo-0.6.0.3.1.0.0-61-sources.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/hadoop-lzo-0.6.0.3.1.0.0-61.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/hadoop-lzo-0.6.0.3.1.0.0-61.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/htrace-core4-4.1.0-incubating.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/httpclient-4.5.2.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/httpcore-4.4.4.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/jackson-annotations-2.9.5.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/jackson-core-2.9.5.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/jackson-core-asl-1.9.13.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/jackson-databind-2.9.5.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/jackson-jaxrs-1.9.13.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/jackson-mapper-asl-1.9.13.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/jackson-xc-1.9.13.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/javax.servlet-api-3.1.0.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/jaxb-api-2.2.11.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/jaxb-impl-2.2.3-1.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/jcip-annotations-1.0-1.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/jersey-core-1.19.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/jersey-json-1.19.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/jersey-server-1.19.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/jersey-servlet-1.19.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/jettison-1.1.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/jetty-http-9.3.24.v20180605.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/jetty-io-9.3.24.v20180605.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/jetty-security-9.3.24.v20180605.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/jetty-server-9.3.24.v20180605.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/jetty-servlet-9.3.24.v20180605.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/jetty-util-9.3.24.v20180605.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/jetty-webapp-9.3.24.v20180605.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/jetty-xml-9.3.24.v20180605.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/jsch-0.1.54.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/json-smart-2.3.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/jsp-api-2.1.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/jsr305-3.0.0.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/jsr311-api-1.1.1.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/jul-to-slf4j-1.7.25.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/kerb-admin-1.0.1.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/kerb-client-1.0.1.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/kerb-common-1.0.1.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/kerb-core-1.0.1.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/kerb-crypto-1.0.1.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/kerb-identity-1.0.1.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/kerb-server-1.0.1.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/kerb-simplekdc-1.0.1.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/kerb-util-1.0.1.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/kerby-asn1-1.0.1.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/kerby-config-1.0.1.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/kerby-pkix-1.0.1.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/kerby-util-1.0.1.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/kerby-xdr-1.0.1.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/log4j-1.2.17.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/metrics-core-3.2.4.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/netty-3.10.5.Final.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/nimbus-jose-jwt-4.41.1.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/paranamer-2.3.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/protobuf-java-2.5.0.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/ranger-hdfs-plugin-shim-1.2.0.3.1.0.0-61.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/ranger-plugin-classloader-1.2.0.3.1.0.0-61.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/ranger-yarn-plugin-shim-1.2.0.3.1.0.0-61.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/re2j-1.1.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/slf4j-api-1.7.25.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/slf4j-log4j12-1.7.25.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/snappy-java-1.0.5.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/stax2-api-3.1.4.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/token-provider-1.0.1.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/woodstox-core-5.0.3.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/xz-1.0.jar",
+      "/usr/hdp/3.1.0.0-61/hadoop/lib/zookeeper-3.4.6.3.1.0.0-61.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/hadoop-hdfs-3.1.1.3.1.0.0-61-tests.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/hadoop-hdfs-3.1.1.3.1.0.0-61.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/hadoop-hdfs-client-3.1.1.3.1.0.0-61-tests.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/hadoop-hdfs-client-3.1.1.3.1.0.0-61.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/hadoop-hdfs-client-tests.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/hadoop-hdfs-client.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/hadoop-hdfs-httpfs-3.1.1.3.1.0.0-61.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/hadoop-hdfs-httpfs.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/hadoop-hdfs-native-client-3.1.1.3.1.0.0-61-tests.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/hadoop-hdfs-native-client-3.1.1.3.1.0.0-61.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/hadoop-hdfs-native-client-tests.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/hadoop-hdfs-native-client.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/hadoop-hdfs-nfs-3.1.1.3.1.0.0-61.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/hadoop-hdfs-nfs.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/hadoop-hdfs-rbf-3.1.1.3.1.0.0-61-tests.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/hadoop-hdfs-rbf-3.1.1.3.1.0.0-61.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/hadoop-hdfs-rbf-tests.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/hadoop-hdfs-rbf.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/hadoop-hdfs-tests.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/hadoop-hdfs.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/accessors-smart-1.2.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/asm-5.0.4.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/avro-1.7.7.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/commons-beanutils-1.9.3.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/commons-cli-1.2.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/commons-codec-1.11.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/commons-collections-3.2.2.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/commons-compress-1.4.1.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/commons-configuration2-2.1.1.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/commons-daemon-1.0.13.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/commons-io-2.5.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/commons-lang-2.6.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/commons-lang3-3.4.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/commons-logging-1.1.3.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/commons-math3-3.1.1.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/commons-net-3.6.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/curator-client-2.12.0.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/curator-framework-2.12.0.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/curator-recipes-2.12.0.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/gson-2.2.4.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/guava-11.0.2.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/htrace-core4-4.1.0-incubating.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/httpclient-4.5.2.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/httpcore-4.4.4.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/jackson-annotations-2.9.5.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/jackson-core-2.9.5.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/jackson-core-asl-1.9.13.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/jackson-databind-2.9.5.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/jackson-jaxrs-1.9.13.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/jackson-mapper-asl-1.9.13.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/jackson-xc-1.9.13.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/javax.servlet-api-3.1.0.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/jaxb-api-2.2.11.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/jaxb-impl-2.2.3-1.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/jcip-annotations-1.0-1.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/jersey-core-1.19.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/jersey-json-1.19.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/jersey-server-1.19.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/jersey-servlet-1.19.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/jettison-1.1.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/jetty-http-9.3.24.v20180605.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/jetty-io-9.3.24.v20180605.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/jetty-security-9.3.24.v20180605.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/jetty-server-9.3.24.v20180605.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/jetty-servlet-9.3.24.v20180605.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/jetty-util-9.3.24.v20180605.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/jetty-util-ajax-9.3.24.v20180605.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/jetty-webapp-9.3.24.v20180605.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/jetty-xml-9.3.24.v20180605.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/jsch-0.1.54.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/json-simple-1.1.1.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/json-smart-2.3.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/jsr305-3.0.0.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/jsr311-api-1.1.1.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/kerb-admin-1.0.1.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/kerb-client-1.0.1.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/kerb-common-1.0.1.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/kerb-core-1.0.1.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/kerb-crypto-1.0.1.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/kerb-identity-1.0.1.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/kerb-server-1.0.1.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/kerb-simplekdc-1.0.1.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/kerb-util-1.0.1.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/kerby-asn1-1.0.1.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/kerby-config-1.0.1.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/kerby-pkix-1.0.1.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/kerby-util-1.0.1.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/kerby-xdr-1.0.1.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/leveldbjni-all-1.8.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/log4j-1.2.17.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/netty-3.10.5.Final.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/netty-all-4.0.52.Final.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/nimbus-jose-jwt-4.41.1.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/okhttp-2.7.5.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/okio-1.6.0.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/paranamer-2.3.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/protobuf-java-2.5.0.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/re2j-1.1.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/snappy-java-1.0.5.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/stax2-api-3.1.4.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/token-provider-1.0.1.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/woodstox-core-5.0.3.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/xz-1.0.jar",
+      "/usr/hdp/current/hadoop-hdfs-client/lib/zookeeper-3.4.6.3.1.0.0-61.jar",
+      "/usr/hdp/current/hadoop-yarn-client/hadoop-yarn-api-3.1.1.3.1.0.0-61.jar",
+      "/usr/hdp/current/hadoop-yarn-client/hadoop-yarn-api.jar",
+      "/usr/hdp/current/hadoop-yarn-client/hadoop-yarn-applications-distributedshell-3.1.1.3.1.0.0-61.jar",
+      "/usr/hdp/current/hadoop-yarn-client/hadoop-yarn-applications-distributedshell.jar",
+      "/usr/hdp/current/hadoop-yarn-client/hadoop-yarn-applications-unmanaged-am-launcher-3.1.1.3.1.0.0-61.jar",
+      "/usr/hdp/current/hadoop-yarn-client/hadoop-yarn-applications-unmanaged-am-launcher.jar",
+      "/usr/hdp/current/hadoop-yarn-client/hadoop-yarn-client-3.1.1.3.1.0.0-61.jar",
+      "/usr/hdp/current/hadoop-yarn-client/hadoop-yarn-client.jar",
+      "/usr/hdp/current/hadoop-yarn-client/hadoop-yarn-common-3.1.1.3.1.0.0-61.jar",
+      "/usr/hdp/current/hadoop-yarn-client/hadoop-yarn-common.jar",
+      "/usr/hdp/current/hadoop-yarn-client/hadoop-yarn-registry-3.1.1.3.1.0.0-61.jar",
+      "/usr/hdp/current/hadoop-yarn-client/hadoop-yarn-registry.jar",
+      "/usr/hdp/current/hadoop-yarn-client/hadoop-yarn-server-applicationhistoryservice-3.1.1.3.1.0.0-61.jar",
+      "/usr/hdp/current/hadoop-yarn-client/hadoop-yarn-server-applicationhistoryservice.jar",
+      "/usr/hdp/current/hadoop-yarn-client/hadoop-yarn-server-common-3.1.1.3.1.0.0-61.jar",
+      "/usr/hdp/current/hadoop-yarn-client/hadoop-yarn-server-common.jar",
+      "/usr/hdp/current/hadoop-yarn-client/hadoop-yarn-server-nodemanager-3.1.1.3.1.0.0-61.jar",
+      "/usr/hdp/current/hadoop-yarn-client/hadoop-yarn-server-nodemanager.jar",
+      "/usr/hdp/current/hadoop-yarn-client/hadoop-yarn-server-resourcemanager-3.1.1.3.1.0.0-61.jar",
+      "/usr/hdp/current/hadoop-yarn-client/hadoop-yarn-server-resourcemanager.jar",
+      "/usr/hdp/current/hadoop-yarn-client/hadoop-yarn-server-router-3.1.1.3.1.0.0-61.jar",
+      "/usr/hdp/current/hadoop-yarn-client/hadoop-yarn-server-router.jar",
+      "/usr/hdp/current/hadoop-yarn-client/hadoop-yarn-server-sharedcachemanager-3.1.1.3.1.0.0-61.jar",
+      "/usr/hdp/current/hadoop-yarn-client/hadoop-yarn-server-sharedcachemanager.jar",
+      "/usr/hdp/current/hadoop-yarn-client/hadoop-yarn-server-tests-3.1.1.3.1.0.0-61.jar",
+      "/usr/hdp/current/hadoop-yarn-client/hadoop-yarn-server-tests.jar",
+      "/usr/hdp/current/hadoop-yarn-client/hadoop-yarn-server-timeline-pluginstorage-3.1.1.3.1.0.0-61.jar",
+      "/usr/hdp/current/hadoop-yarn-client/hadoop-yarn-server-timeline-pluginstorage.jar",
+      "/usr/hdp/current/hadoop-yarn-client/hadoop-yarn-server-web-proxy-3.1.1.3.1.0.0-61.jar",
+      "/usr/hdp/current/hadoop-yarn-client/hadoop-yarn-server-web-proxy.jar",
+      "/usr/hdp/current/hadoop-yarn-client/hadoop-yarn-services-api-3.1.1.3.1.0.0-61.jar",
+      "/usr/hdp/current/hadoop-yarn-client/hadoop-yarn-services-api.jar",
+      "/usr/hdp/current/hadoop-yarn-client/hadoop-yarn-services-core-3.1.1.3.1.0.0-61.jar",
+      "/usr/hdp/current/hadoop-yarn-client/hadoop-yarn-services-core.jar",
+      "/usr/hdp/current/hadoop-yarn-client/lib/HikariCP-java7-2.4.12.jar",
+      "/usr/hdp/current/hadoop-yarn-client/lib/aopalliance-1.0.jar",
+      "/usr/hdp/current/hadoop-yarn-client/lib/dnsjava-2.1.7.jar",
+      "/usr/hdp/current/hadoop-yarn-client/lib/ehcache-3.3.1.jar",
+      "/usr/hdp/current/hadoop-yarn-client/lib/fst-2.50.jar",
+      "/usr/hdp/current/hadoop-yarn-client/lib/geronimo-jcache_1.0_spec-1.0-alpha-1.jar",
+      "/usr/hdp/current/hadoop-yarn-client/lib/guice-4.0.jar",
+      "/usr/hdp/current/hadoop-yarn-client/lib/guice-servlet-4.0.jar",
+      "/usr/hdp/current/hadoop-yarn-client/lib/jackson-jaxrs-base-2.9.5.jar",
+      "/usr/hdp/current/hadoop-yarn-client/lib/jackson-jaxrs-json-provider-2.9.5.jar",
+      "/usr/hdp/current/hadoop-yarn-client/lib/jackson-module-jaxb-annotations-2.9.5.jar",
+      "/usr/hdp/current/hadoop-yarn-client/lib/java-util-1.9.0.jar",
+      "/usr/hdp/current/hadoop-yarn-client/lib/javax.inject-1.jar",
+      "/usr/hdp/current/hadoop-yarn-client/lib/jersey-client-1.19.jar",
+      "/usr/hdp/current/hadoop-yarn-client/lib/jersey-guice-1.19.jar",
+      "/usr/hdp/current/hadoop-yarn-client/lib/json-io-2.5.1.jar",
+      "/usr/hdp/current/hadoop-yarn-client/lib/metrics-core-3.2.4.jar",
+      "/usr/hdp/current/hadoop-yarn-client/lib/mssql-jdbc-6.2.1.jre7.jar",
+      "/usr/hdp/current/hadoop-yarn-client/lib/objenesis-1.0.jar",
+      "/usr/hdp/current/hadoop-yarn-client/lib/snakeyaml-1.16.jar",
+      "/usr/hdp/current/hadoop-yarn-client/lib/swagger-annotations-1.5.4.jar"
+    ]
+  },
+  "System Properties": {
+    "awt.toolkit": [
+      "sun.awt.X11.XToolkit"
+    ],
+    "file.encoding.pkg": [
+      "sun.io"
+    ],
+    "java.specification.version": [
+      "1.8"
+    ],
+    "sun.cpu.isalist": [
+      ""
+    ],
+    "sun.jnu.encoding": [
+      "UTF-8"
+    ],
+    "java.vm.vendor": [
+      "Oracle Corporation"
+    ],
+    "sun.arch.data.model": [
+      "64"
+    ],
+    "java.vendor.url": [
+      "http://java.oracle.com/"
+    ],
+    "user.timezone": [
+      "UTC"
+    ],
+    "hdp.vm.sampling.duration": [
+      "2500"
+    ],
+    "java.vm.specification.version": [
+      "1.8"
+    ],
+    "os.name": [
+      "Linux"
+    ],
+    "sun.java.launcher": [
+      "SUN_STANDARD"
+    ],
+    "user.country": [
+      "US"
+    ],
+    "sun.boot.library.path": [
+      "/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.161-2.b14.el7.x86_64/jre/lib/amd64"
+    ],
+    "sun.java.command": [
+      "org.apache.spark.deploy.yarn.ApplicationMaster --class org.apache.livy.rsc.driver.RSCDriverBootstrapper --properties-file /grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/__spark_conf__/__spark_conf__.properties"
+    ],
+    "sun.cpu.endian": [
+      "little"
+    ],
+    "user.home": [
+      "/var/lib/hadoop-yarn"
+    ],
+    "user.language": [
+      "en"
+    ],
+    "java.specification.vendor": [
+      "Oracle Corporation"
+    ],
+    "hdp.version": [
+      "3.1.0.0-61"
+    ],
+    "java.home": [
+      "/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.161-2.b14.el7.x86_64/jre"
+    ],
+    "file.separator": [
+      "/"
+    ],
+    "line.separator": [
+      "\n"
+    ],
+    "java.specification.name": [
+      "Java Platform API Specification"
+    ],
+    "java.vm.specification.vendor": [
+      "Oracle Corporation"
+    ],
+    "java.awt.graphicsenv": [
+      "sun.awt.X11GraphicsEnvironment"
+    ],
+    "sun.boot.class.path": [
+      "/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.161-2.b14.el7.x86_64/jre/lib/resources.jar:/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.161-2.b14.el7.x86_64/jre/lib/rt.jar:/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.161-2.b14.el7.x86_64/jre/lib/sunrsasign.jar:/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.161-2.b14.el7.x86_64/jre/lib/jsse.jar:/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.161-2.b14.el7.x86_64/jre/lib/jce.jar:/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.161-2.b14.el7.x86_64/jre/lib/charsets.jar:/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.161-2.b14.el7.x86_64/jre/lib/jfr.jar:/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.161-2.b14.el7.x86_64/jre/classes"
+    ],
+    "sun.management.compiler": [
+      "HotSpot 64-Bit Tiered Compilers"
+    ],
+    "java.runtime.version": [
+      "1.8.0_161-b14"
+    ],
+    "user.name": [
+      "yarn"
+    ],
+    "path.separator": [
+      ":"
+    ],
+    "DesEventHandler.AGGREGATION_DURATION_MS": [
+      "2500"
+    ],
+    "os.version": [
+      "4.15.12-1.el7.elrepo.x86_64"
+    ],
+    "java.endorsed.dirs": [
+      "/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.161-2.b14.el7.x86_64/jre/lib/endorsed"
+    ],
+    "java.runtime.name": [
+      "OpenJDK Runtime Environment"
+    ],
+    "file.encoding": [
+      "UTF-8"
+    ],
+    "sun.nio.ch.bugLevel": [
+      ""
+    ],
+    "java.vm.name": [
+      "OpenJDK 64-Bit Server VM"
+    ],
+    "ProcessMonitor.threadStateSnapshotProvider": [
+      "com.cloudera.safari.spark.monitoring.utils.system.snapshot.thread.HonestProfilerBasedThreadSnapshotProvider"
+    ],
+    "MonitoringAgent.LOG_INFO": [
+      "true"
+    ],
+    "java.vendor.url.bug": [
+      "http://bugreport.sun.com/bugreport/"
+    ],
+    "jetty.git.hash": [
+      "84205aa28f11a4f31f2a3b86d1bba2cc8ab69827"
+    ],
+    "java.io.tmpdir": [
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001/tmp"
+    ],
+    "java.version": [
+      "1.8.0_161"
+    ],
+    "user.dir": [
+      "/grid/0/hadoop/yarn/local/usercache/admin/appcache/application_1543876392892_0246/container_e02_1543876392892_0246_01_000001"
+    ],
+    "os.arch": [
+      "amd64"
+    ],
+    "java.vm.specification.name": [
+      "Java Virtual Machine Specification"
+    ],
+    "java.awt.printerjob": [
+      "sun.print.PSPrinterJob"
+    ],
+    "sun.os.patch.level": [
+      "unknown"
+    ],
+    "java.library.path": [
+      "/usr/hdp/current/hadoop-client/lib/native:/usr/hdp/current/hadoop-client/lib/native/Linux-amd64-64::/usr/java/packages/lib/amd64:/usr/lib64:/lib64:/lib:/usr/lib"
+    ],
+    "java.vendor": [
+      "Oracle Corporation"
+    ],
+    "java.vm.info": [
+      "mixed mode"
+    ],
+    "java.vm.version": [
+      "25.161-b14"
+    ],
+    "java.ext.dirs": [
+      "/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.161-2.b14.el7.x86_64/jre/lib/ext:/usr/java/packages/lib/ext"
+    ],
+    "sun.io.unicode.encoding": [
+      "UnicodeLittle"
+    ],
+    "java.class.version": [
+      "52.0"
+    ]
+  }
+}

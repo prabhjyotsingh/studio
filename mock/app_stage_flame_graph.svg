@@ -1,0 +1,1842 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" width="1200" height="1126" onload="init(evt)" viewBox="0 0 1200 1126" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <!-- Flame graph stack visualization. See https://github.com/brendangregg/FlameGraph for latest version, and http://www.brendangregg.com/flamegraphs.html for examples. -->
+  <!-- NOTES:  -->
+  <defs >
+    <linearGradient id="background" y1="0" y2="1" x1="0" x2="0" >
+      <stop stop-color="#eeeeee" offset="5%" />
+      <stop stop-color="#eeeeb0" offset="95%" />
+    </linearGradient>
+  </defs>
+  <style type="text/css">
+    .func_g:hover { stroke:black; stroke-width:0.5; cursor:pointer; }
+  </style>
+  <script type="text/ecmascript">
+    <![CDATA[
+	var details, searchbtn, matchedtxt, svg;
+	function init(evt) {
+		details = document.getElementById("details").firstChild;
+		searchbtn = document.getElementById("search");
+		matchedtxt = document.getElementById("matched");
+		svg = document.getElementsByTagName("svg")[0];
+		searching = 0;
+	}
+
+	// mouse-over for info
+	function s(node) {		// show
+		info = g_to_text(node);
+		details.nodeValue = "Function: " + info;
+	}
+	function c() {			// clear
+		details.nodeValue = ' ';
+	}
+
+	// ctrl-F for search
+	window.addEventListener("keydown",function (e) {
+		if (e.keyCode === 114 || (e.ctrlKey && e.keyCode === 70)) {
+			e.preventDefault();
+			search_prompt();
+		}
+	})
+
+	// functions
+	function find_child(parent, name, attr) {
+		var children = parent.childNodes;
+		for (var i=0; i<children.length;i++) {
+			if (children[i].tagName == name)
+				return (attr != undefined) ? children[i].attributes[attr].value : children[i];
+		}
+		return;
+	}
+	function orig_save(e, attr, val) {
+		if (e.attributes["_orig_"+attr] != undefined) return;
+		if (e.attributes[attr] == undefined) return;
+		if (val == undefined) val = e.attributes[attr].value;
+		e.setAttribute("_orig_"+attr, val);
+	}
+	function orig_load(e, attr) {
+		if (e.attributes["_orig_"+attr] == undefined) return;
+		e.attributes[attr].value = e.attributes["_orig_"+attr].value;
+		e.removeAttribute("_orig_"+attr);
+	}
+	function g_to_text(e) {
+		var text = find_child(e, "title").firstChild.nodeValue;
+		return (text)
+	}
+	function g_to_func(e) {
+		var func = g_to_text(e);
+		// if there's any manipulation we want to do to the function
+		// name before it's searched, do it here before returning.
+		return (func);
+	}
+	function update_text(e) {
+		var r = find_child(e, "rect");
+		var t = find_child(e, "text");
+		var w = parseFloat(r.attributes["width"].value) -3;
+		var txt = find_child(e, "title").textContent.replace(/\([^(]*\)$/,"");
+		t.attributes["x"].value = parseFloat(r.attributes["x"].value) +3;
+
+		// Smaller than this size won't fit anything
+		if (w < 2*12*0.59) {
+			t.textContent = "";
+			return;
+		}
+
+		t.textContent = txt;
+		// Fit in full text width
+		if (/^ *$/.test(txt) || t.getSubStringLength(0, txt.length) < w)
+			return;
+
+		for (var x=txt.length-2; x>0; x--) {
+			if (t.getSubStringLength(0, x+2) <= w) {
+				t.textContent = txt.substring(0,x) + "..";
+				return;
+			}
+		}
+		t.textContent = "";
+	}
+
+	// zoom
+	function zoom_reset(e) {
+		if (e.attributes != undefined) {
+			orig_load(e, "x");
+			orig_load(e, "width");
+		}
+		if (e.childNodes == undefined) return;
+		for(var i=0, c=e.childNodes; i<c.length; i++) {
+			zoom_reset(c[i]);
+		}
+	}
+	function zoom_child(e, x, ratio) {
+		if (e.attributes != undefined) {
+			if (e.attributes["x"] != undefined) {
+				orig_save(e, "x");
+				e.attributes["x"].value = (parseFloat(e.attributes["x"].value) - x - 10) * ratio + 10;
+				if(e.tagName == "text") e.attributes["x"].value = find_child(e.parentNode, "rect", "x") + 3;
+			}
+			if (e.attributes["width"] != undefined) {
+				orig_save(e, "width");
+				e.attributes["width"].value = parseFloat(e.attributes["width"].value) * ratio;
+			}
+		}
+
+		if (e.childNodes == undefined) return;
+		for(var i=0, c=e.childNodes; i<c.length; i++) {
+			zoom_child(c[i], x-10, ratio);
+		}
+	}
+	function zoom_parent(e) {
+		if (e.attributes) {
+			if (e.attributes["x"] != undefined) {
+				orig_save(e, "x");
+				e.attributes["x"].value = 10;
+			}
+			if (e.attributes["width"] != undefined) {
+				orig_save(e, "width");
+				e.attributes["width"].value = parseInt(svg.width.baseVal.value) - (10*2);
+			}
+		}
+		if (e.childNodes == undefined) return;
+		for(var i=0, c=e.childNodes; i<c.length; i++) {
+			zoom_parent(c[i]);
+		}
+	}
+	function zoom(node) {
+		var attr = find_child(node, "rect").attributes;
+		var width = parseFloat(attr["width"].value);
+		var xmin = parseFloat(attr["x"].value);
+		var xmax = parseFloat(xmin + width);
+		var ymin = parseFloat(attr["y"].value);
+		var ratio = (svg.width.baseVal.value - 2*10) / width;
+
+		// XXX: Workaround for JavaScript float issues (fix me)
+		var fudge = 0.0001;
+
+		var unzoombtn = document.getElementById("unzoom");
+		unzoombtn.style["opacity"] = "1.0";
+
+		var el = document.getElementsByTagName("g");
+		for(var i=0;i<el.length;i++){
+			var e = el[i];
+			var a = find_child(e, "rect").attributes;
+			var ex = parseFloat(a["x"].value);
+			var ew = parseFloat(a["width"].value);
+			// Is it an ancestor
+			if (0 == 0) {
+				var upstack = parseFloat(a["y"].value) > ymin;
+			} else {
+				var upstack = parseFloat(a["y"].value) < ymin;
+			}
+			if (upstack) {
+				// Direct ancestor
+				if (ex <= xmin && (ex+ew+fudge) >= xmax) {
+					e.style["opacity"] = "0.5";
+					zoom_parent(e);
+					e.onclick = function(e){unzoom(); zoom(this);};
+					update_text(e);
+				}
+				// not in current path
+				else
+					e.style["display"] = "none";
+			}
+			// Children maybe
+			else {
+				// no common path
+				if (ex < xmin || ex + fudge >= xmax) {
+					e.style["display"] = "none";
+				}
+				else {
+					zoom_child(e, xmin, ratio);
+					e.onclick = function(e){zoom(this);};
+					update_text(e);
+				}
+			}
+		}
+	}
+	function unzoom() {
+		var unzoombtn = document.getElementById("unzoom");
+		unzoombtn.style["opacity"] = "0.0";
+
+		var el = document.getElementsByTagName("g");
+		for(i=0;i<el.length;i++) {
+			el[i].style["display"] = "block";
+			el[i].style["opacity"] = "1";
+			zoom_reset(el[i]);
+			update_text(el[i]);
+		}
+	}
+
+	// search
+	function reset_search() {
+		var el = document.getElementsByTagName("rect");
+		for (var i=0; i < el.length; i++) {
+			orig_load(el[i], "fill")
+		}
+	}
+	function search_prompt() {
+		if (!searching) {
+			var term = prompt("Enter a search term (regexp " +
+			    "allowed, eg: ^ext4_)", "");
+			if (term != null) {
+				search(term)
+			}
+		} else {
+			reset_search();
+			searching = 0;
+			searchbtn.style["opacity"] = "0.1";
+			searchbtn.firstChild.nodeValue = "Search"
+			matchedtxt.style["opacity"] = "0.0";
+			matchedtxt.firstChild.nodeValue = ""
+		}
+	}
+	function search(term) {
+		var re = new RegExp(term);
+		var el = document.getElementsByTagName("g");
+		var matches = new Object();
+		var maxwidth = 0;
+		for (var i = 0; i < el.length; i++) {
+			var e = el[i];
+			if (e.attributes["class"].value != "func_g")
+				continue;
+			var func = g_to_func(e);
+			var rect = find_child(e, "rect");
+			if (rect == null) {
+				// the rect might be wrapped in an anchor
+				// if nameattr href is being used
+				if (rect = find_child(e, "a")) {
+				    rect = find_child(r, "rect");
+				}
+			}
+			if (func == null || rect == null)
+				continue;
+
+			// Save max width. Only works as we have a root frame
+			var w = parseFloat(rect.attributes["width"].value);
+			if (w > maxwidth)
+				maxwidth = w;
+
+			if (func.match(re)) {
+				// highlight
+				var x = parseFloat(rect.attributes["x"].value);
+				orig_save(rect, "fill");
+				rect.attributes["fill"].value =
+				    "rgb(230,0,230)";
+
+				// remember matches
+				if (matches[x] == undefined) {
+					matches[x] = w;
+				} else {
+					if (w > matches[x]) {
+						// overwrite with parent
+						matches[x] = w;
+					}
+				}
+				searching = 1;
+			}
+		}
+		if (!searching)
+			return;
+
+		searchbtn.style["opacity"] = "1.0";
+		searchbtn.firstChild.nodeValue = "Reset Search"
+
+		// calculate percent matched, excluding vertical overlap
+		var count = 0;
+		var lastx = -1;
+		var lastw = 0;
+		var keys = Array();
+		for (k in matches) {
+			if (matches.hasOwnProperty(k))
+				keys.push(k);
+		}
+		// sort the matched frames by their x location
+		// ascending, then width descending
+		keys.sort(function(a, b){
+			return a - b;
+		});
+		// Step through frames saving only the biggest bottom-up frames
+		// thanks to the sort order. This relies on the tree property
+		// where children are always smaller than their parents.
+		var fudge = 0.0001;	// JavaScript floating point
+		for (var k in keys) {
+			var x = parseFloat(keys[k]);
+			var w = matches[keys[k]];
+			if (x >= lastx + lastw - fudge) {
+				count += w;
+				lastx = x;
+				lastw = w;
+			}
+		}
+		// display matched percent
+		matchedtxt.style["opacity"] = "1.0";
+		pct = 100 * count / maxwidth;
+		if (pct == 100)
+			pct = "100"
+		else
+			pct = pct.toFixed(1)
+		matchedtxt.firstChild.nodeValue = "Matched: " + pct + "%";
+	}
+	function searchover(e) {
+		searchbtn.style["opacity"] = "1.0";
+	}
+	function searchout(e) {
+		if (searching) {
+			searchbtn.style["opacity"] = "1.0";
+		} else {
+			searchbtn.style["opacity"] = "0.1";
+		}
+	}
+]]>
+  </script>
+  <rect x="0.0" y="0" width="1200.0" height="1126.0" fill="url(#background)"  />
+  <text text-anchor="middle" x="600.00" y="24" font-size="17" font-family="Verdana" fill="rgb(0,0,0)"  >Flamegraph for Stage 5</text>
+  <text text-anchor="" x="10.00" y="1109" font-size="12" font-family="Verdana" fill="rgb(0,0,0)" id="details" > </text>
+  <text text-anchor="" x="10.00" y="24" font-size="12" font-family="Verdana" fill="rgb(0,0,0)" id="unzoom" onclick="unzoom()" style="opacity:0.0;cursor:pointer" >Reset Zoom</text>
+  <text text-anchor="" x="1090.00" y="24" font-size="12" font-family="Verdana" fill="rgb(0,0,0)" id="search" onmouseover="searchover()" onmouseout="searchout()" onclick="search_prompt()" style="opacity:0.1;cursor:pointer" >Search</text>
+  <text text-anchor="" x="1090.00" y="1109" font-size="12" font-family="Verdana" fill="rgb(0,0,0)" id="matched" > </text>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.hdfs.DistributedFileSystem.getFileStatus (12 samples, 5.08%)</title><rect x="890.0" y="709" width="60.0" height="15.0" fill="rgb(207,66,14)" rx="2" ry="2" />
+    <text text-anchor="" x="893.00" y="719.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.ap..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.storage.BlockManager$$anonfun$doPutIterator$1.apply (3 samples, 1.27%)</title><rect x="860.0" y="565" width="15.0" height="15.0" fill="rgb(214,72,19)" rx="2" ry="2" />
+    <text text-anchor="" x="863.00" y="575.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.storage.DiskBlockObjectWriter.commitAndGet (6 samples, 2.54%)</title><rect x="115.0" y="933" width="30.0" height="15.0" fill="rgb(219,193,2)" rx="2" ry="2" />
+    <text text-anchor="" x="118.00" y="943.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >or..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>net.jpountz.lz4.LZ4Compressor.compress (3 samples, 1.27%)</title><rect x="130.0" y="821" width="15.0" height="15.0" fill="rgb(250,99,15)" rx="2" ry="2" />
+    <text text-anchor="" x="133.00" y="831.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.unsafe.hash.Murmur3_x86_32.hashInt (3 samples, 1.27%)</title><rect x="1130.0" y="837" width="15.0" height="15.0" fill="rgb(253,201,17)" rx="2" ry="2" />
+    <text text-anchor="" x="1133.00" y="847.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.execution.UnsafeRowSerializerInstance$$anon$1.writeValue (93 samples, 39.41%)</title><rect x="160.0" y="917" width="465.0" height="15.0" fill="rgb(212,66,41)" rx="2" ry="2" />
+    <text text-anchor="" x="163.00" y="927.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.apache.spark.sql.execution.UnsafeRowSerializerInstance$$ano..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.hdfs.NameNodeProxiesClient.createProxyWithClientProtocol (3 samples, 1.27%)</title><rect x="875.0" y="565" width="15.0" height="15.0" fill="rgb(223,126,31)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="575.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.security.AccessController.doPrivileged (3 samples, 1.27%)</title><rect x="830.0" y="709" width="15.0" height="15.0" fill="rgb(220,177,0)" rx="2" ry="2" />
+    <text text-anchor="" x="833.00" y="719.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.parquet.hadoop.ColumnChunkPageReadStore$ColumnChunkPageReader.readPage (3 samples, 1.27%)</title><rect x="980.0" y="757" width="15.0" height="15.0" fill="rgb(249,165,7)" rx="2" ry="2" />
+    <text text-anchor="" x="983.00" y="767.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.lang.reflect.Method.invoke (3 samples, 1.27%)</title><rect x="845.0" y="485" width="15.0" height="15.0" fill="rgb(253,158,17)" rx="2" ry="2" />
+    <text text-anchor="" x="848.00" y="495.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.lang.ClassLoader.loadClass (3 samples, 1.27%)</title><rect x="830.0" y="773" width="15.0" height="15.0" fill="rgb(208,158,6)" rx="2" ry="2" />
+    <text text-anchor="" x="833.00" y="783.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.storage.BlockManager.putIterator (3 samples, 1.27%)</title><rect x="860.0" y="613" width="15.0" height="15.0" fill="rgb(214,189,35)" rx="2" ry="2" />
+    <text text-anchor="" x="863.00" y="623.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.util.SizeEstimator$.visitArray (3 samples, 1.27%)</title><rect x="860.0" y="421" width="15.0" height="15.0" fill="rgb(207,210,14)" rx="2" ry="2" />
+    <text text-anchor="" x="863.00" y="431.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.storage.DiskBlockObjectWriter.write (105 samples, 44.49%)</title><rect x="145.0" y="933" width="525.0" height="15.0" fill="rgb(238,127,9)" rx="2" ry="2" />
+    <text text-anchor="" x="148.00" y="943.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.apache.spark.storage.DiskBlockObjectWriter.write</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.log4j.WriterAppender.append (3 samples, 1.27%)</title><rect x="25.0" y="501" width="15.0" height="15.0" fill="rgb(212,219,2)" rx="2" ry="2" />
+    <text text-anchor="" x="28.00" y="511.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>sun.reflect.NativeMethodAccessorImpl.invoke (12 samples, 5.08%)</title><rect x="890.0" y="501" width="60.0" height="15.0" fill="rgb(254,166,35)" rx="2" ry="2" />
+    <text text-anchor="" x="893.00" y="511.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >sun.re..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.io.WritableUtils.readCompressedByteArray (3 samples, 1.27%)</title><rect x="845.0" y="293" width="15.0" height="15.0" fill="rgb(244,59,7)" rx="2" ry="2" />
+    <text text-anchor="" x="848.00" y="303.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.util.Utils.copyStream (6 samples, 2.54%)</title><rect x="85.0" y="917" width="30.0" height="15.0" fill="rgb(232,150,52)" rx="2" ry="2" />
+    <text text-anchor="" x="88.00" y="927.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >or..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>scala.collection.immutable.List.foreach (3 samples, 1.27%)</title><rect x="25.0" y="789" width="15.0" height="15.0" fill="rgb(248,166,37)" rx="2" ry="2" />
+    <text text-anchor="" x="28.00" y="799.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.broadcast.TorrentBroadcast$$anonfun$org$apache$spark$broadcast$TorrentBroadcast$$readBlocks$1.apply (3 samples, 1.27%)</title><rect x="25.0" y="773" width="15.0" height="15.0" fill="rgb(209,146,12)" rx="2" ry="2" />
+    <text text-anchor="" x="28.00" y="783.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.codehaus.janino.UnitCompiler.compile (3 samples, 1.27%)</title><rect x="1160.0" y="757" width="15.0" height="15.0" fill="rgb(240,88,34)" rx="2" ry="2" />
+    <text text-anchor="" x="1163.00" y="767.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.parquet.bytes.LittleEndianDataInputStream.readInt (5 samples, 2.12%)</title><rect x="805.0" y="661" width="25.0" height="15.0" fill="rgb(252,146,12)" rx="2" ry="2" />
+    <text text-anchor="" x="808.00" y="671.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >o..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.execution.datasources.parquet.VectorizedColumnReader.readPageV1 (6 samples, 2.54%)</title><rect x="950.0" y="693" width="30.0" height="15.0" fill="rgb(219,84,52)" rx="2" ry="2" />
+    <text text-anchor="" x="953.00" y="703.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >or..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.fs.FileSystem$Cache.getInternal (3 samples, 1.27%)</title><rect x="875.0" y="661" width="15.0" height="15.0" fill="rgb(245,110,12)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="671.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.util.SerializableConfiguration.readObject (3 samples, 1.27%)</title><rect x="845.0" y="421" width="15.0" height="15.0" fill="rgb(239,62,46)" rx="2" ry="2" />
+    <text text-anchor="" x="848.00" y="431.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.io.FilterOutputStream.close (3 samples, 1.27%)</title><rect x="115.0" y="885" width="15.0" height="15.0" fill="rgb(224,108,46)" rx="2" ry="2" />
+    <text text-anchor="" x="118.00" y="895.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.hdfs.DFSInputStream.readBuffer (6 samples, 2.54%)</title><rect x="775.0" y="645" width="30.0" height="15.0" fill="rgb(232,68,33)" rx="2" ry="2" />
+    <text text-anchor="" x="778.00" y="655.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >or..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>sun.nio.ch.FileDispatcherImpl.write0 (6 samples, 2.54%)</title><rect x="85.0" y="709" width="30.0" height="15.0" fill="rgb(249,4,27)" rx="2" ry="2" />
+    <text text-anchor="" x="88.00" y="719.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >su..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.serializer.JavaDeserializationStream.readObject (3 samples, 1.27%)</title><rect x="845.0" y="581" width="15.0" height="15.0" fill="rgb(242,32,38)" rx="2" ry="2" />
+    <text text-anchor="" x="848.00" y="591.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.catalyst.expressions.codegen.UnsafeRowWriter.zeroOutNullBytes (3 samples, 1.27%)</title><rect x="1115.0" y="837" width="15.0" height="15.0" fill="rgb(249,46,42)" rx="2" ry="2" />
+    <text text-anchor="" x="1118.00" y="847.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.spark_project.guava.cache.LocalCache$Segment.loadSync (3 samples, 1.27%)</title><rect x="1160.0" y="949" width="15.0" height="15.0" fill="rgb(243,193,43)" rx="2" ry="2" />
+    <text text-anchor="" x="1163.00" y="959.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>sun.misc.ProxyGenerator.generateClassFile (3 samples, 1.27%)</title><rect x="875.0" y="261" width="15.0" height="15.0" fill="rgb(231,139,12)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="271.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.lang.Class.privateGetPublicMethods (3 samples, 1.27%)</title><rect x="875.0" y="229" width="15.0" height="15.0" fill="rgb(232,11,37)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="239.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>scala.Option.getOrElse (6 samples, 2.54%)</title><rect x="845.0" y="661" width="30.0" height="15.0" fill="rgb(226,75,30)" rx="2" ry="2" />
+    <text text-anchor="" x="848.00" y="671.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >sc..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.io.DataOutputStream.writeInt (24 samples, 10.17%)</title><rect x="160.0" y="901" width="120.0" height="15.0" fill="rgb(221,109,19)" rx="2" ry="2" />
+    <text text-anchor="" x="163.00" y="911.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >java.io.DataOu..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.ipc.protobuf.IpcConnectionContextProtos$IpcConnectionContextProto.initFields (3 samples, 1.27%)</title><rect x="905.0" y="277" width="15.0" height="15.0" fill="rgb(233,84,39)" rx="2" ry="2" />
+    <text text-anchor="" x="908.00" y="287.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.execution.datasources.RecordReaderIterator.hasNext (14 samples, 5.93%)</title><rect x="760.0" y="805" width="70.0" height="15.0" fill="rgb(230,75,54)" rx="2" ry="2" />
+    <text text-anchor="" x="763.00" y="815.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.apa..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>net.jpountz.util.SafeUtils.checkRange (3 samples, 1.27%)</title><rect x="610.0" y="821" width="15.0" height="15.0" fill="rgb(238,40,34)" rx="2" ry="2" />
+    <text text-anchor="" x="613.00" y="831.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.hdfs.DistributedFileSystem.initialize (3 samples, 1.27%)</title><rect x="875.0" y="613" width="15.0" height="15.0" fill="rgb(218,31,54)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="623.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.io.ObjectInputStream.readOrdinaryObject (3 samples, 1.27%)</title><rect x="845.0" y="533" width="15.0" height="15.0" fill="rgb(234,88,44)" rx="2" ry="2" />
+    <text text-anchor="" x="848.00" y="543.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.storage.BlockManager.doPut (3 samples, 1.27%)</title><rect x="860.0" y="581" width="15.0" height="15.0" fill="rgb(238,181,31)" rx="2" ry="2" />
+    <text text-anchor="" x="863.00" y="591.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>net.jpountz.util.SafeUtils.checkRange (3 samples, 1.27%)</title><rect x="610.0" y="805" width="15.0" height="15.0" fill="rgb(227,135,39)" rx="2" ry="2" />
+    <text text-anchor="" x="613.00" y="815.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.io.BufferedOutputStream.write (24 samples, 10.17%)</title><rect x="160.0" y="885" width="120.0" height="15.0" fill="rgb(235,132,48)" rx="2" ry="2" />
+    <text text-anchor="" x="163.00" y="895.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >java.io.Buffer..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.storage.DiskBlockObjectWriter.open (9 samples, 3.81%)</title><rect x="625.0" y="917" width="45.0" height="15.0" fill="rgb(215,73,7)" rx="2" ry="2" />
+    <text text-anchor="" x="628.00" y="927.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org...</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.storage.DiskBlockObjectWriter$ManualCloseBufferedOutputStream$1.&lt;init&gt; (3 samples, 1.27%)</title><rect x="1175.0" y="1045" width="15.0" height="15.0" fill="rgb(247,117,17)" rx="2" ry="2" />
+    <text text-anchor="" x="1178.00" y="1055.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.broadcast.TorrentBroadcast$.unBlockifyObject (3 samples, 1.27%)</title><rect x="845.0" y="629" width="15.0" height="15.0" fill="rgb(238,167,50)" rx="2" ry="2" />
+    <text text-anchor="" x="848.00" y="639.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.network.shuffle.RetryingBlockFetcher.fetchAllOutstanding (3 samples, 1.27%)</title><rect x="25.0" y="661" width="15.0" height="15.0" fill="rgb(242,87,51)" rx="2" ry="2" />
+    <text text-anchor="" x="28.00" y="671.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.codehaus.janino.Java$PackageMemberClassDeclaration.accept (3 samples, 1.27%)</title><rect x="1160.0" y="741" width="15.0" height="15.0" fill="rgb(247,26,17)" rx="2" ry="2" />
+    <text text-anchor="" x="1163.00" y="751.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.parquet.hadoop.util.H2SeekableInputStream.readFully (6 samples, 2.54%)</title><rect x="775.0" y="709" width="30.0" height="15.0" fill="rgb(239,71,1)" rx="2" ry="2" />
+    <text text-anchor="" x="778.00" y="719.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >or..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>net.jpountz.lz4.LZ4BlockOutputStream.&lt;init&gt; (3 samples, 1.27%)</title><rect x="655.0" y="821" width="15.0" height="15.0" fill="rgb(242,144,6)" rx="2" ry="2" />
+    <text text-anchor="" x="658.00" y="831.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.lang.reflect.Method.invoke (12 samples, 5.08%)</title><rect x="890.0" y="533" width="60.0" height="15.0" fill="rgb(231,100,47)" rx="2" ry="2" />
+    <text text-anchor="" x="893.00" y="543.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >java.l..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.execution.datasources.parquet.VectorizedColumnReader.readPage (9 samples, 3.81%)</title><rect x="950.0" y="773" width="45.0" height="15.0" fill="rgb(210,186,22)" rx="2" ry="2" />
+    <text text-anchor="" x="953.00" y="783.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org...</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.execution.UnsafeRowSerializerInstance$$anon$1.flush (3 samples, 1.27%)</title><rect x="130.0" y="917" width="15.0" height="15.0" fill="rgb(208,3,32)" rx="2" ry="2" />
+    <text text-anchor="" x="133.00" y="927.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.parquet.hadoop.util.HadoopInputFile.fromPath (15 samples, 6.36%)</title><rect x="875.0" y="725" width="75.0" height="15.0" fill="rgb(232,171,41)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="735.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.apac..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.hdfs.client.impl.BlockReaderLocal.fillBuffer (6 samples, 2.54%)</title><rect x="775.0" y="565" width="30.0" height="15.0" fill="rgb(242,84,34)" rx="2" ry="2" />
+    <text text-anchor="" x="778.00" y="575.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >or..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>sun.nio.ch.FileChannelImpl.transferToTrustedChannel (6 samples, 2.54%)</title><rect x="85.0" y="789" width="30.0" height="15.0" fill="rgb(216,67,2)" rx="2" ry="2" />
+    <text text-anchor="" x="88.00" y="799.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >su..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.execution.datasources.parquet.VectorizedColumnReader.&lt;init&gt; (5 samples, 2.12%)</title><rect x="805.0" y="741" width="25.0" height="15.0" fill="rgb(228,8,19)" rx="2" ry="2" />
+    <text text-anchor="" x="808.00" y="751.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >o..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.scheduler.Task.run (227 samples, 96.19%)</title><rect x="25.0" y="997" width="1135.0" height="15.0" fill="rgb(211,207,46)" rx="2" ry="2" />
+    <text text-anchor="" x="28.00" y="1007.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.apache.spark.scheduler.Task.run</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>scala.collection.Iterator$$anon$11.hasNext (74 samples, 31.36%)</title><rect x="670.0" y="933" width="370.0" height="15.0" fill="rgb(243,150,17)" rx="2" ry="2" />
+    <text text-anchor="" x="673.00" y="943.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >scala.collection.Iterator$$anon$11.hasNext</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.util.SerializableConfiguration$$anonfun$readObject$1.apply (3 samples, 1.27%)</title><rect x="845.0" y="373" width="15.0" height="15.0" fill="rgb(211,156,12)" rx="2" ry="2" />
+    <text text-anchor="" x="848.00" y="383.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>sun.reflect.NativeMethodAccessorImpl.invoke0 (3 samples, 1.27%)</title><rect x="845.0" y="437" width="15.0" height="15.0" fill="rgb(238,46,6)" rx="2" ry="2" />
+    <text text-anchor="" x="848.00" y="447.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>sun.reflect.DelegatingMethodAccessorImpl.invoke (6 samples, 2.54%)</title><rect x="920.0" y="357" width="30.0" height="15.0" fill="rgb(226,125,37)" rx="2" ry="2" />
+    <text text-anchor="" x="923.00" y="367.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >su..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.io.LZ4CompressionCodec.compressedOutputStream (3 samples, 1.27%)</title><rect x="655.0" y="869" width="15.0" height="15.0" fill="rgb(252,40,0)" rx="2" ry="2" />
+    <text text-anchor="" x="658.00" y="879.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.hdfs.protocol.proto.ClientNamenodeProtocolProtos$GetFileInfoResponseProto.&lt;clinit&gt; (6 samples, 2.54%)</title><rect x="920.0" y="309" width="30.0" height="15.0" fill="rgb(207,143,38)" rx="2" ry="2" />
+    <text text-anchor="" x="923.00" y="319.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >or..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.codehaus.janino.SimpleCompiler.cook (3 samples, 1.27%)</title><rect x="1160.0" y="789" width="15.0" height="15.0" fill="rgb(205,177,24)" rx="2" ry="2" />
+    <text text-anchor="" x="1163.00" y="799.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.execution.datasources.parquet.VectorizedColumnReader$1.visit (3 samples, 1.27%)</title><rect x="760.0" y="709" width="15.0" height="15.0" fill="rgb(243,14,50)" rx="2" ry="2" />
+    <text text-anchor="" x="763.00" y="719.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.log4j.helpers.AppenderAttachableImpl.appendLoopOnAppenders (3 samples, 1.27%)</title><rect x="25.0" y="533" width="15.0" height="15.0" fill="rgb(250,96,33)" rx="2" ry="2" />
+    <text text-anchor="" x="28.00" y="543.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.io.retry.RetryInvocationHandler.invokeMethod (12 samples, 5.08%)</title><rect x="890.0" y="549" width="60.0" height="15.0" fill="rgb(230,104,48)" rx="2" ry="2" />
+    <text text-anchor="" x="893.00" y="559.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.ap..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.io.retry.RetryProxy.create (3 samples, 1.27%)</title><rect x="875.0" y="533" width="15.0" height="15.0" fill="rgb(210,88,9)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="543.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.execution.datasources.parquet.VectorizedParquetRecordReader.nextBatch (14 samples, 5.93%)</title><rect x="760.0" y="773" width="70.0" height="15.0" fill="rgb(231,55,2)" rx="2" ry="2" />
+    <text text-anchor="" x="763.00" y="783.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.apa..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.shuffle.sort.BypassMergeSortShuffleWriter.write (224 samples, 94.92%)</title><rect x="40.0" y="949" width="1120.0" height="15.0" fill="rgb(227,180,30)" rx="2" ry="2" />
+    <text text-anchor="" x="43.00" y="959.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.apache.spark.shuffle.sort.BypassMergeSortShuffleWriter.write</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.ipc.Client$Connection.access$3600 (3 samples, 1.27%)</title><rect x="905.0" y="357" width="15.0" height="15.0" fill="rgb(245,94,15)" rx="2" ry="2" />
+    <text text-anchor="" x="908.00" y="367.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.hdfs.NameNodeProxiesClient.createNonHAProxyWithClientProtocol (3 samples, 1.27%)</title><rect x="875.0" y="421" width="15.0" height="15.0" fill="rgb(251,152,15)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="431.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.execution.datasources.parquet.VectorizedParquetRecordReader.nextBatch (15 samples, 6.36%)</title><rect x="950.0" y="805" width="75.0" height="15.0" fill="rgb(210,176,0)" rx="2" ry="2" />
+    <text text-anchor="" x="953.00" y="815.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.apac..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.spark_project.guava.cache.LocalCache$Segment.get (3 samples, 1.27%)</title><rect x="1160.0" y="981" width="15.0" height="15.0" fill="rgb(222,99,37)" rx="2" ry="2" />
+    <text text-anchor="" x="1163.00" y="991.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.lang.reflect.Method.invoke (6 samples, 2.54%)</title><rect x="920.0" y="373" width="30.0" height="15.0" fill="rgb(233,223,8)" rx="2" ry="2" />
+    <text text-anchor="" x="923.00" y="383.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >ja..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.io.DataOutputStream.write (69 samples, 29.24%)</title><rect x="280.0" y="885" width="345.0" height="15.0" fill="rgb(223,80,2)" rx="2" ry="2" />
+    <text text-anchor="" x="283.00" y="895.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >java.io.DataOutputStream.write</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.io.FilterOutputStream.close (3 samples, 1.27%)</title><rect x="115.0" y="901" width="15.0" height="15.0" fill="rgb(210,217,48)" rx="2" ry="2" />
+    <text text-anchor="" x="118.00" y="911.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.execution.WholeStageCodegenExec$$anonfun$10.apply (3 samples, 1.27%)</title><rect x="1160.0" y="1061" width="15.0" height="15.0" fill="rgb(247,79,18)" rx="2" ry="2" />
+    <text text-anchor="" x="1163.00" y="1071.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.network.client.TransportClientFactory.createClient (3 samples, 1.27%)</title><rect x="25.0" y="613" width="15.0" height="15.0" fill="rgb(212,143,17)" rx="2" ry="2" />
+    <text text-anchor="" x="28.00" y="623.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.execution.datasources.parquet.VectorizedParquetRecordReader.initialize (15 samples, 6.36%)</title><rect x="875.0" y="773" width="75.0" height="15.0" fill="rgb(227,19,3)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="783.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.apac..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.hdfs.protocol.proto.HdfsProtos$HdfsFileStatusProto.&lt;clinit&gt; (3 samples, 1.27%)</title><rect x="935.0" y="277" width="15.0" height="15.0" fill="rgb(220,197,36)" rx="2" ry="2" />
+    <text text-anchor="" x="938.00" y="287.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.lang.ClassLoader.loadClass (3 samples, 1.27%)</title><rect x="875.0" y="133" width="15.0" height="15.0" fill="rgb(214,154,20)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="143.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.fs.Path.getFileSystem (3 samples, 1.27%)</title><rect x="875.0" y="709" width="15.0" height="15.0" fill="rgb(243,86,54)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="719.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.execution.datasources.parquet.VectorizedColumnReader.readBatch (3 samples, 1.27%)</title><rect x="760.0" y="757" width="15.0" height="15.0" fill="rgb(227,11,0)" rx="2" ry="2" />
+    <text text-anchor="" x="763.00" y="767.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.util.zip.Inflater.&lt;init&gt; (3 samples, 1.27%)</title><rect x="845.0" y="245" width="15.0" height="15.0" fill="rgb(212,63,19)" rx="2" ry="2" />
+    <text text-anchor="" x="848.00" y="255.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.io.FileOutputStream.write (3 samples, 1.27%)</title><rect x="115.0" y="789" width="15.0" height="15.0" fill="rgb(209,145,4)" rx="2" ry="2" />
+    <text text-anchor="" x="118.00" y="799.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.execution.datasources.FileScanRDD$$anon$1.nextIterator (38 samples, 16.10%)</title><rect x="760.0" y="837" width="190.0" height="15.0" fill="rgb(231,5,7)" rx="2" ry="2" />
+    <text text-anchor="" x="763.00" y="847.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.apache.spark.sql.exe..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.unsafe.Platform.getInt (3 samples, 1.27%)</title><rect x="1100.0" y="821" width="15.0" height="15.0" fill="rgb(226,137,13)" rx="2" ry="2" />
+    <text text-anchor="" x="1103.00" y="831.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.xerial.snappy.Snappy.uncompress (6 samples, 2.54%)</title><rect x="950.0" y="597" width="30.0" height="15.0" fill="rgb(240,187,49)" rx="2" ry="2" />
+    <text text-anchor="" x="953.00" y="607.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >or..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.io.DataOutputStream.flush (3 samples, 1.27%)</title><rect x="130.0" y="901" width="15.0" height="15.0" fill="rgb(244,144,16)" rx="2" ry="2" />
+    <text text-anchor="" x="133.00" y="911.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.util.SerializableConfiguration$$anonfun$readObject$1.apply$mcV$sp (3 samples, 1.27%)</title><rect x="845.0" y="357" width="15.0" height="15.0" fill="rgb(237,162,45)" rx="2" ry="2" />
+    <text text-anchor="" x="848.00" y="367.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.lang.Class.privateGetPublicMethods (3 samples, 1.27%)</title><rect x="875.0" y="213" width="15.0" height="15.0" fill="rgb(226,105,28)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="223.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.codehaus.janino.SimpleCompiler.cook (3 samples, 1.27%)</title><rect x="1160.0" y="853" width="15.0" height="15.0" fill="rgb(221,84,39)" rx="2" ry="2" />
+    <text text-anchor="" x="1163.00" y="863.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider.getProxy (3 samples, 1.27%)</title><rect x="875.0" y="453" width="15.0" height="15.0" fill="rgb(235,57,51)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="463.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.execution.exchange.ShuffleExchangeExec$$anonfun$org$apache$spark$sql$execution$exchange$ShuffleExchangeExec$$getPartitionKeyExtractor$1$2.apply (18 samples, 7.63%)</title><rect x="1055.0" y="869" width="90.0" height="15.0" fill="rgb(216,97,47)" rx="2" ry="2" />
+    <text text-anchor="" x="1058.00" y="879.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.apache..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.parquet.hadoop.ColumnChunkPageReadStore$ColumnChunkPageReader$1.visit (3 samples, 1.27%)</title><rect x="980.0" y="725" width="15.0" height="15.0" fill="rgb(246,184,43)" rx="2" ry="2" />
+    <text text-anchor="" x="983.00" y="735.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.util.zip.GZIPInputStream.&lt;init&gt; (3 samples, 1.27%)</title><rect x="845.0" y="277" width="15.0" height="15.0" fill="rgb(218,145,11)" rx="2" ry="2" />
+    <text text-anchor="" x="848.00" y="287.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.net.URLClassLoader$1.run (3 samples, 1.27%)</title><rect x="875.0" y="85" width="15.0" height="15.0" fill="rgb(206,198,1)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="95.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.network.BlockTransferService.fetchBlockSync (3 samples, 1.27%)</title><rect x="25.0" y="709" width="15.0" height="15.0" fill="rgb(224,196,29)" rx="2" ry="2" />
+    <text text-anchor="" x="28.00" y="719.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.execution.datasources.parquet.ParquetFileFormat$$anonfun$buildReaderWithPartitionValues$1.apply (24 samples, 10.17%)</title><rect x="830.0" y="789" width="120.0" height="15.0" fill="rgb(233,190,39)" rx="2" ry="2" />
+    <text text-anchor="" x="833.00" y="799.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.apache.spa..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.io.retry.RetryInvocationHandler$Call.invokeMethod (12 samples, 5.08%)</title><rect x="890.0" y="565" width="60.0" height="15.0" fill="rgb(252,222,35)" rx="2" ry="2" />
+    <text text-anchor="" x="893.00" y="575.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.ap..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.hdfs.NameNodeProxiesClient.createHAProxy (3 samples, 1.27%)</title><rect x="875.0" y="549" width="15.0" height="15.0" fill="rgb(245,186,46)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="559.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>sun.reflect.NativeMethodAccessorImpl.invoke (3 samples, 1.27%)</title><rect x="845.0" y="453" width="15.0" height="15.0" fill="rgb(252,174,17)" rx="2" ry="2" />
+    <text text-anchor="" x="848.00" y="463.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.hdfs.protocolPB.ClientNamenodeProtocolTranslatorPB.getFileInfo (12 samples, 5.08%)</title><rect x="890.0" y="469" width="60.0" height="15.0" fill="rgb(236,188,25)" rx="2" ry="2" />
+    <text text-anchor="" x="893.00" y="479.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.ap..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.broadcast.TorrentBroadcast.readBroadcastBlock (6 samples, 2.54%)</title><rect x="845.0" y="709" width="30.0" height="15.0" fill="rgb(221,105,25)" rx="2" ry="2" />
+    <text text-anchor="" x="848.00" y="719.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >or..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.broadcast.TorrentBroadcast._value$lzycompute (6 samples, 2.54%)</title><rect x="845.0" y="725" width="30.0" height="15.0" fill="rgb(237,104,29)" rx="2" ry="2" />
+    <text text-anchor="" x="848.00" y="735.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >or..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.util.ProtoUtil.makeIpcConnectionContext (3 samples, 1.27%)</title><rect x="905.0" y="309" width="15.0" height="15.0" fill="rgb(242,9,12)" rx="2" ry="2" />
+    <text text-anchor="" x="908.00" y="319.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.network.netty.NettyBlockTransferService.fetchBlocks (3 samples, 1.27%)</title><rect x="25.0" y="693" width="15.0" height="15.0" fill="rgb(211,92,3)" rx="2" ry="2" />
+    <text text-anchor="" x="28.00" y="703.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.util.SizeEstimator$.visitSingleObject (3 samples, 1.27%)</title><rect x="860.0" y="437" width="15.0" height="15.0" fill="rgb(212,97,3)" rx="2" ry="2" />
+    <text text-anchor="" x="863.00" y="447.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.util.Utils$$anonfun$copyStream$1.apply (6 samples, 2.54%)</title><rect x="85.0" y="853" width="30.0" height="15.0" fill="rgb(206,96,4)" rx="2" ry="2" />
+    <text text-anchor="" x="88.00" y="863.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >or..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>net.jpountz.lz4.LZ4BlockOutputStream.close (3 samples, 1.27%)</title><rect x="115.0" y="869" width="15.0" height="15.0" fill="rgb(243,17,24)" rx="2" ry="2" />
+    <text text-anchor="" x="118.00" y="879.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.catalyst.expressions.UnsafeRow.writeToStream (69 samples, 29.24%)</title><rect x="280.0" y="901" width="345.0" height="15.0" fill="rgb(232,59,28)" rx="2" ry="2" />
+    <text text-anchor="" x="283.00" y="911.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.apache.spark.sql.catalyst.expressions.Unsa..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.hdfs.client.impl.BlockReaderLocal.readWithBounceBuffer (6 samples, 2.54%)</title><rect x="775.0" y="597" width="30.0" height="15.0" fill="rgb(206,2,7)" rx="2" ry="2" />
+    <text text-anchor="" x="778.00" y="607.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >or..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.spark_project.guava.cache.LocalCache$Segment.lockedGetOrLoad (3 samples, 1.27%)</title><rect x="1160.0" y="965" width="15.0" height="15.0" fill="rgb(224,40,46)" rx="2" ry="2" />
+    <text text-anchor="" x="1163.00" y="975.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>sun.nio.ch.IOUtil.write (6 samples, 2.54%)</title><rect x="85.0" y="757" width="30.0" height="15.0" fill="rgb(227,57,2)" rx="2" ry="2" />
+    <text text-anchor="" x="88.00" y="767.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >su..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.ipc.ProtobufRpcEngine.getProxy (3 samples, 1.27%)</title><rect x="875.0" y="389" width="15.0" height="15.0" fill="rgb(249,50,26)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="399.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.execution.UnsafeRowSerializerInstance$$anon$1.close (3 samples, 1.27%)</title><rect x="115.0" y="917" width="15.0" height="15.0" fill="rgb(218,150,47)" rx="2" ry="2" />
+    <text text-anchor="" x="118.00" y="927.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.execution.datasources.RecordReaderIterator.hasNext (15 samples, 6.36%)</title><rect x="950.0" y="837" width="75.0" height="15.0" fill="rgb(205,81,40)" rx="2" ry="2" />
+    <text text-anchor="" x="953.00" y="847.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.apac..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.ipc.Client.call (3 samples, 1.27%)</title><rect x="905.0" y="389" width="15.0" height="15.0" fill="rgb(230,194,41)" rx="2" ry="2" />
+    <text text-anchor="" x="908.00" y="399.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.hdfs.DFSClient.getFileInfo (12 samples, 5.08%)</title><rect x="890.0" y="645" width="60.0" height="15.0" fill="rgb(224,184,17)" rx="2" ry="2" />
+    <text text-anchor="" x="893.00" y="655.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.ap..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>net.jpountz.lz4.LZ4BlockOutputStream.finish (3 samples, 1.27%)</title><rect x="115.0" y="853" width="15.0" height="15.0" fill="rgb(219,13,21)" rx="2" ry="2" />
+    <text text-anchor="" x="118.00" y="863.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.security.SecureClassLoader.defineClass (3 samples, 1.27%)</title><rect x="830.0" y="629" width="15.0" height="15.0" fill="rgb(231,179,24)" rx="2" ry="2" />
+    <text text-anchor="" x="833.00" y="639.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.broadcast.TorrentBroadcast.org$apache$spark$broadcast$TorrentBroadcast$$readBlocks (3 samples, 1.27%)</title><rect x="25.0" y="805" width="15.0" height="15.0" fill="rgb(237,10,51)" rx="2" ry="2" />
+    <text text-anchor="" x="28.00" y="815.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.lang.Thread.run (227 samples, 96.19%)</title><rect x="25.0" y="1061" width="1135.0" height="15.0" fill="rgb(207,17,20)" rx="2" ry="2" />
+    <text text-anchor="" x="28.00" y="1071.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >java.lang.Thread.run</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.storage.TimeTrackingOutputStream.write (3 samples, 1.27%)</title><rect x="115.0" y="805" width="15.0" height="15.0" fill="rgb(227,145,47)" rx="2" ry="2" />
+    <text text-anchor="" x="118.00" y="815.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.hdfs.DFSClient.&lt;init&gt; (3 samples, 1.27%)</title><rect x="875.0" y="581" width="15.0" height="15.0" fill="rgb(224,182,24)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="591.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.io.DataInputStream.readFully (6 samples, 2.54%)</title><rect x="775.0" y="693" width="30.0" height="15.0" fill="rgb(219,29,47)" rx="2" ry="2" />
+    <text text-anchor="" x="778.00" y="703.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >ja..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.broadcast.TorrentBroadcast.getValue (6 samples, 2.54%)</title><rect x="845.0" y="757" width="30.0" height="15.0" fill="rgb(225,46,47)" rx="2" ry="2" />
+    <text text-anchor="" x="848.00" y="767.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >or..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.io.retry.RetryInvocationHandler$Call.invoke (12 samples, 5.08%)</title><rect x="890.0" y="581" width="60.0" height="15.0" fill="rgb(236,21,16)" rx="2" ry="2" />
+    <text text-anchor="" x="893.00" y="591.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.ap..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.lang.ClassLoader.loadClass (3 samples, 1.27%)</title><rect x="875.0" y="165" width="15.0" height="15.0" fill="rgb(224,15,52)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="175.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.security.AccessController.doPrivileged (3 samples, 1.27%)</title><rect x="875.0" y="101" width="15.0" height="15.0" fill="rgb(228,53,11)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>sun.nio.ch.FileDispatcherImpl.write (6 samples, 2.54%)</title><rect x="85.0" y="725" width="30.0" height="15.0" fill="rgb(248,134,40)" rx="2" ry="2" />
+    <text text-anchor="" x="88.00" y="735.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >su..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.catalyst.expressions.GeneratedClass$GeneratedIteratorForCodegenStage1.scan_nextBatch_0$ (53 samples, 22.46%)</title><rect x="760.0" y="869" width="265.0" height="15.0" fill="rgb(213,150,43)" rx="2" ry="2" />
+    <text text-anchor="" x="763.00" y="879.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.apache.spark.sql.catalyst.expre..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.xerial.snappy.SnappyNative.rawUncompress (6 samples, 2.54%)</title><rect x="950.0" y="581" width="30.0" height="15.0" fill="rgb(239,14,1)" rx="2" ry="2" />
+    <text text-anchor="" x="953.00" y="591.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >or..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.ipc.RPC.getProtocolProxy (3 samples, 1.27%)</title><rect x="875.0" y="405" width="15.0" height="15.0" fill="rgb(205,16,21)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="415.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.hdfs.client.impl.BlockReaderLocal.read (6 samples, 2.54%)</title><rect x="775.0" y="613" width="30.0" height="15.0" fill="rgb(222,30,28)" rx="2" ry="2" />
+    <text text-anchor="" x="778.00" y="623.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >or..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.parquet.column.Encoding$3.getValuesReader (3 samples, 1.27%)</title><rect x="760.0" y="645" width="15.0" height="15.0" fill="rgb(211,186,22)" rx="2" ry="2" />
+    <text text-anchor="" x="763.00" y="655.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.scheduler.ShuffleMapTask.runTask (227 samples, 96.19%)</title><rect x="25.0" y="965" width="1135.0" height="15.0" fill="rgb(222,204,15)" rx="2" ry="2" />
+    <text text-anchor="" x="28.00" y="975.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.apache.spark.scheduler.ShuffleMapTask.runTask</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.util.collection.SizeTrackingVector.$plus$eq (3 samples, 1.27%)</title><rect x="860.0" y="517" width="15.0" height="15.0" fill="rgb(251,114,14)" rx="2" ry="2" />
+    <text text-anchor="" x="863.00" y="527.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.util.collection.SizeTracker$class.afterUpdate (3 samples, 1.27%)</title><rect x="860.0" y="501" width="15.0" height="15.0" fill="rgb(223,34,49)" rx="2" ry="2" />
+    <text text-anchor="" x="863.00" y="511.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.storage.BlockManager$$anonfun$doPutIterator$1.apply (3 samples, 1.27%)</title><rect x="860.0" y="549" width="15.0" height="15.0" fill="rgb(238,219,36)" rx="2" ry="2" />
+    <text text-anchor="" x="863.00" y="559.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.parquet.column.Encoding$4.initDictionary (5 samples, 2.12%)</title><rect x="805.0" y="725" width="25.0" height="15.0" fill="rgb(227,164,17)" rx="2" ry="2" />
+    <text text-anchor="" x="808.00" y="735.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >o..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.parquet.column.Encoding$1.initDictionary (5 samples, 2.12%)</title><rect x="805.0" y="709" width="25.0" height="15.0" fill="rgb(209,8,12)" rx="2" ry="2" />
+    <text text-anchor="" x="808.00" y="719.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >o..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.broadcast.TorrentBroadcast._value$lzycompute (3 samples, 1.27%)</title><rect x="25.0" y="901" width="15.0" height="15.0" fill="rgb(223,90,54)" rx="2" ry="2" />
+    <text text-anchor="" x="28.00" y="911.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>sun.nio.ch.FileChannelImpl.read (6 samples, 2.54%)</title><rect x="775.0" y="533" width="30.0" height="15.0" fill="rgb(220,19,22)" rx="2" ry="2" />
+    <text text-anchor="" x="778.00" y="543.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >su..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.log4j.WriterAppender.subAppend (3 samples, 1.27%)</title><rect x="25.0" y="485" width="15.0" height="15.0" fill="rgb(236,83,40)" rx="2" ry="2" />
+    <text text-anchor="" x="28.00" y="495.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.parquet.hadoop.CodecFactory$BytesDecompressor.decompress (3 samples, 1.27%)</title><rect x="980.0" y="693" width="15.0" height="15.0" fill="rgb(211,184,29)" rx="2" ry="2" />
+    <text text-anchor="" x="983.00" y="703.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.conf.Configuration.readFields (3 samples, 1.27%)</title><rect x="845.0" y="341" width="15.0" height="15.0" fill="rgb(246,22,45)" rx="2" ry="2" />
+    <text text-anchor="" x="848.00" y="351.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.io.ObjectInputStream.readSerialData (3 samples, 1.27%)</title><rect x="845.0" y="517" width="15.0" height="15.0" fill="rgb(207,62,39)" rx="2" ry="2" />
+    <text text-anchor="" x="848.00" y="527.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.io.ObjectInputStream.readObject (3 samples, 1.27%)</title><rect x="845.0" y="565" width="15.0" height="15.0" fill="rgb(251,61,27)" rx="2" ry="2" />
+    <text text-anchor="" x="848.00" y="575.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.conf.Configuration.getInt (3 samples, 1.27%)</title><rect x="980.0" y="661" width="15.0" height="15.0" fill="rgb(235,88,2)" rx="2" ry="2" />
+    <text text-anchor="" x="983.00" y="671.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.util.Utils$.tryOrIOException (3 samples, 1.27%)</title><rect x="25.0" y="869" width="15.0" height="15.0" fill="rgb(254,46,29)" rx="2" ry="2" />
+    <text text-anchor="" x="28.00" y="879.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.lang.Class.forName (3 samples, 1.27%)</title><rect x="760.0" y="581" width="15.0" height="15.0" fill="rgb(235,160,9)" rx="2" ry="2" />
+    <text text-anchor="" x="763.00" y="591.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.catalyst.expressions.UnsafeRow.getInt (3 samples, 1.27%)</title><rect x="1100.0" y="837" width="15.0" height="15.0" fill="rgb(230,35,41)" rx="2" ry="2" />
+    <text text-anchor="" x="1103.00" y="847.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>scala.collection.Iterator$$anon$11.next (24 samples, 10.17%)</title><rect x="1040.0" y="933" width="120.0" height="15.0" fill="rgb(244,177,38)" rx="2" ry="2" />
+    <text text-anchor="" x="1043.00" y="943.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >scala.collecti..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.broadcast.TorrentBroadcast$$anonfun$org$apache$spark$broadcast$TorrentBroadcast$$readBlocks$1.apply (3 samples, 1.27%)</title><rect x="25.0" y="757" width="15.0" height="15.0" fill="rgb(217,100,10)" rx="2" ry="2" />
+    <text text-anchor="" x="28.00" y="767.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>sun.reflect.NativeMethodAccessorImpl.invoke0 (12 samples, 5.08%)</title><rect x="890.0" y="485" width="60.0" height="15.0" fill="rgb(251,149,0)" rx="2" ry="2" />
+    <text text-anchor="" x="893.00" y="495.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >sun.re..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.io.BufferedOutputStream.flushBuffer (3 samples, 1.27%)</title><rect x="115.0" y="821" width="15.0" height="15.0" fill="rgb(209,69,19)" rx="2" ry="2" />
+    <text text-anchor="" x="118.00" y="831.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.fs.FileSystem.access$200 (3 samples, 1.27%)</title><rect x="875.0" y="645" width="15.0" height="15.0" fill="rgb(231,59,11)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="655.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.util.SizeEstimator$.org$apache$spark$util$SizeEstimator$$estimate (3 samples, 1.27%)</title><rect x="860.0" y="453" width="15.0" height="15.0" fill="rgb(219,144,8)" rx="2" ry="2" />
+    <text text-anchor="" x="863.00" y="463.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>scala.runtime.BoxesRunTime.boxToInteger (3 samples, 1.27%)</title><rect x="1145.0" y="885" width="15.0" height="15.0" fill="rgb(217,111,50)" rx="2" ry="2" />
+    <text text-anchor="" x="1148.00" y="895.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.parquet.column.values.bitpacking.Packer.getStaticField (3 samples, 1.27%)</title><rect x="760.0" y="597" width="15.0" height="15.0" fill="rgb(221,146,35)" rx="2" ry="2" />
+    <text text-anchor="" x="763.00" y="607.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.util.Utils$.tryOrIOException (6 samples, 2.54%)</title><rect x="845.0" y="693" width="30.0" height="15.0" fill="rgb(249,153,23)" rx="2" ry="2" />
+    <text text-anchor="" x="848.00" y="703.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >or..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.io.FileOutputStream.writeBytes (3 samples, 1.27%)</title><rect x="115.0" y="773" width="15.0" height="15.0" fill="rgb(208,128,36)" rx="2" ry="2" />
+    <text text-anchor="" x="118.00" y="783.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.hdfs.DistributedFileSystem$29.doCall (12 samples, 5.08%)</title><rect x="890.0" y="661" width="60.0" height="15.0" fill="rgb(217,141,12)" rx="2" ry="2" />
+    <text text-anchor="" x="893.00" y="671.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.ap..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.serializer.SerializerManager.wrapForCompression (3 samples, 1.27%)</title><rect x="655.0" y="885" width="15.0" height="15.0" fill="rgb(246,5,35)" rx="2" ry="2" />
+    <text text-anchor="" x="658.00" y="895.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>sun.reflect.NativeMethodAccessorImpl.invoke (6 samples, 2.54%)</title><rect x="920.0" y="341" width="30.0" height="15.0" fill="rgb(220,78,4)" rx="2" ry="2" />
+    <text text-anchor="" x="923.00" y="351.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >su..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.parquet.bytes.BytesInput$StreamBytesInput.toByteArray (6 samples, 2.54%)</title><rect x="950.0" y="677" width="30.0" height="15.0" fill="rgb(237,226,53)" rx="2" ry="2" />
+    <text text-anchor="" x="953.00" y="687.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >or..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.shuffle.sort.BypassMergeSortShuffleWriter.writePartitionedFile (12 samples, 5.08%)</title><rect x="55.0" y="933" width="60.0" height="15.0" fill="rgb(214,31,38)" rx="2" ry="2" />
+    <text text-anchor="" x="58.00" y="943.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.ap..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>net.jpountz.lz4.LZ4JNI.LZ4_compress_limitedOutput (3 samples, 1.27%)</title><rect x="130.0" y="789" width="15.0" height="15.0" fill="rgb(213,51,33)" rx="2" ry="2" />
+    <text text-anchor="" x="133.00" y="799.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.lang.Integer.valueOf (3 samples, 1.27%)</title><rect x="1145.0" y="869" width="15.0" height="15.0" fill="rgb(245,110,35)" rx="2" ry="2" />
+    <text text-anchor="" x="1148.00" y="879.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.codehaus.janino.UnitCompiler.checkForConflictWithSingleTypeImport (3 samples, 1.27%)</title><rect x="1160.0" y="661" width="15.0" height="15.0" fill="rgb(242,202,20)" rx="2" ry="2" />
+    <text text-anchor="" x="1163.00" y="671.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>sun.nio.ch.FileDispatcherImpl.pread (6 samples, 2.54%)</title><rect x="775.0" y="469" width="30.0" height="15.0" fill="rgb(228,14,22)" rx="2" ry="2" />
+    <text text-anchor="" x="778.00" y="479.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >su..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.codehaus.janino.ClassBodyEvaluator.compileToClass (3 samples, 1.27%)</title><rect x="1160.0" y="821" width="15.0" height="15.0" fill="rgb(213,28,52)" rx="2" ry="2" />
+    <text text-anchor="" x="1163.00" y="831.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.util.zip.GZIPInputStream.&lt;init&gt; (3 samples, 1.27%)</title><rect x="845.0" y="261" width="15.0" height="15.0" fill="rgb(215,95,8)" rx="2" ry="2" />
+    <text text-anchor="" x="848.00" y="271.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.execution.exchange.ShuffleExchangeExec$$anonfun$4$$anonfun$apply$3.apply (21 samples, 8.90%)</title><rect x="1055.0" y="917" width="105.0" height="15.0" fill="rgb(212,188,5)" rx="2" ry="2" />
+    <text text-anchor="" x="1058.00" y="927.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.apache.s..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.execution.datasources.parquet.VectorizedRleValuesReader.readIntegers (6 samples, 2.54%)</title><rect x="995.0" y="773" width="30.0" height="15.0" fill="rgb(245,151,0)" rx="2" ry="2" />
+    <text text-anchor="" x="998.00" y="783.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >or..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.parquet.column.values.bitpacking.LemireBitPackingLE.&lt;clinit&gt; (3 samples, 1.27%)</title><rect x="760.0" y="549" width="15.0" height="15.0" fill="rgb(245,39,34)" rx="2" ry="2" />
+    <text text-anchor="" x="763.00" y="559.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.execution.datasources.parquet.VectorizedColumnReader.readBatch (15 samples, 6.36%)</title><rect x="950.0" y="789" width="75.0" height="15.0" fill="rgb(239,222,13)" rx="2" ry="2" />
+    <text text-anchor="" x="953.00" y="799.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.apac..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.io.BufferedOutputStream.flushBuffer (60 samples, 25.42%)</title><rect x="325.0" y="853" width="300.0" height="15.0" fill="rgb(229,175,25)" rx="2" ry="2" />
+    <text text-anchor="" x="328.00" y="863.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >java.io.BufferedOutputStream.flushBuffer</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.serializer.SerializerManager.wrapStream (3 samples, 1.27%)</title><rect x="655.0" y="901" width="15.0" height="15.0" fill="rgb(224,16,19)" rx="2" ry="2" />
+    <text text-anchor="" x="658.00" y="911.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.executor.Executor$TaskRunner.run (227 samples, 96.19%)</title><rect x="25.0" y="1013" width="1135.0" height="15.0" fill="rgb(206,69,51)" rx="2" ry="2" />
+    <text text-anchor="" x="28.00" y="1023.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.apache.spark.executor.Executor$TaskRunner.run</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.network.client.TransportClientFactory.createClient (3 samples, 1.27%)</title><rect x="25.0" y="629" width="15.0" height="15.0" fill="rgb(208,202,46)" rx="2" ry="2" />
+    <text text-anchor="" x="28.00" y="639.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.execution.datasources.FileScanRDD$$anon$1.hasNext (53 samples, 22.46%)</title><rect x="760.0" y="853" width="265.0" height="15.0" fill="rgb(224,38,13)" rx="2" ry="2" />
+    <text text-anchor="" x="763.00" y="863.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.apache.spark.sql.execution.data..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.storage.BlockManager.getRemoteBytes (3 samples, 1.27%)</title><rect x="25.0" y="725" width="15.0" height="15.0" fill="rgb(236,40,26)" rx="2" ry="2" />
+    <text text-anchor="" x="28.00" y="735.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>sun.nio.ch.FileChannelImpl.write (6 samples, 2.54%)</title><rect x="85.0" y="773" width="30.0" height="15.0" fill="rgb(228,124,43)" rx="2" ry="2" />
+    <text text-anchor="" x="88.00" y="783.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >su..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.execution.datasources.parquet.VectorizedColumnReader$1.visit (6 samples, 2.54%)</title><rect x="950.0" y="725" width="30.0" height="15.0" fill="rgb(222,225,54)" rx="2" ry="2" />
+    <text text-anchor="" x="953.00" y="735.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >or..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.broadcast.Broadcast.value (6 samples, 2.54%)</title><rect x="845.0" y="773" width="30.0" height="15.0" fill="rgb(205,31,28)" rx="2" ry="2" />
+    <text text-anchor="" x="848.00" y="783.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >or..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.net.URLClassLoader$1.run (3 samples, 1.27%)</title><rect x="830.0" y="693" width="15.0" height="15.0" fill="rgb(252,58,51)" rx="2" ry="2" />
+    <text text-anchor="" x="833.00" y="703.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.io.BufferedOutputStream.flush (3 samples, 1.27%)</title><rect x="115.0" y="837" width="15.0" height="15.0" fill="rgb(253,69,52)" rx="2" ry="2" />
+    <text text-anchor="" x="118.00" y="847.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.lang.ClassLoader.loadClass (3 samples, 1.27%)</title><rect x="830.0" y="741" width="15.0" height="15.0" fill="rgb(210,15,34)" rx="2" ry="2" />
+    <text text-anchor="" x="833.00" y="751.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.log4j.Category.log (3 samples, 1.27%)</title><rect x="25.0" y="581" width="15.0" height="15.0" fill="rgb(243,30,31)" rx="2" ry="2" />
+    <text text-anchor="" x="28.00" y="591.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.lang.Class.forName0 (3 samples, 1.27%)</title><rect x="760.0" y="565" width="15.0" height="15.0" fill="rgb(242,158,19)" rx="2" ry="2" />
+    <text text-anchor="" x="763.00" y="575.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>net.jpountz.lz4.LZ4JNICompressor.compress (3 samples, 1.27%)</title><rect x="130.0" y="805" width="15.0" height="15.0" fill="rgb(218,194,45)" rx="2" ry="2" />
+    <text text-anchor="" x="133.00" y="815.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.io.retry.RetryInvocationHandler.&lt;init&gt; (3 samples, 1.27%)</title><rect x="875.0" y="501" width="15.0" height="15.0" fill="rgb(253,83,26)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="511.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.scheduler.ShuffleMapTask.runTask (227 samples, 96.19%)</title><rect x="25.0" y="981" width="1135.0" height="15.0" fill="rgb(206,221,28)" rx="2" ry="2" />
+    <text text-anchor="" x="28.00" y="991.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.apache.spark.scheduler.ShuffleMapTask.runTask</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.net.URLClassLoader.findClass (3 samples, 1.27%)</title><rect x="830.0" y="725" width="15.0" height="15.0" fill="rgb(243,93,1)" rx="2" ry="2" />
+    <text text-anchor="" x="833.00" y="735.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.broadcast.TorrentBroadcast._value (6 samples, 2.54%)</title><rect x="845.0" y="741" width="30.0" height="15.0" fill="rgb(239,201,16)" rx="2" ry="2" />
+    <text text-anchor="" x="848.00" y="751.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >or..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.log4j.Category.callAppenders (3 samples, 1.27%)</title><rect x="25.0" y="549" width="15.0" height="15.0" fill="rgb(252,8,3)" rx="2" ry="2" />
+    <text text-anchor="" x="28.00" y="559.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.slf4j.impl.Log4jLoggerAdapter.info (3 samples, 1.27%)</title><rect x="25.0" y="597" width="15.0" height="15.0" fill="rgb(253,69,29)" rx="2" ry="2" />
+    <text text-anchor="" x="28.00" y="607.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.spark_project.guava.cache.LocalCache.getOrLoad (3 samples, 1.27%)</title><rect x="1160.0" y="1013" width="15.0" height="15.0" fill="rgb(242,77,4)" rx="2" ry="2" />
+    <text text-anchor="" x="1163.00" y="1023.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.util.Utils$.tryOrIOException (3 samples, 1.27%)</title><rect x="845.0" y="405" width="15.0" height="15.0" fill="rgb(229,80,13)" rx="2" ry="2" />
+    <text text-anchor="" x="848.00" y="415.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.hdfs.client.impl.metrics.BlockReaderIoProvider.read (6 samples, 2.54%)</title><rect x="775.0" y="549" width="30.0" height="15.0" fill="rgb(239,223,29)" rx="2" ry="2" />
+    <text text-anchor="" x="778.00" y="559.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >or..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.parquet.hadoop.codec.SnappyDecompressor.decompress (6 samples, 2.54%)</title><rect x="950.0" y="613" width="30.0" height="15.0" fill="rgb(240,59,44)" rx="2" ry="2" />
+    <text text-anchor="" x="953.00" y="623.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >or..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.parquet.hadoop.codec.NonBlockedDecompressorStream.read (6 samples, 2.54%)</title><rect x="950.0" y="629" width="30.0" height="15.0" fill="rgb(210,153,49)" rx="2" ry="2" />
+    <text text-anchor="" x="953.00" y="639.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >or..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.net.URLClassLoader.findClass (3 samples, 1.27%)</title><rect x="875.0" y="117" width="15.0" height="15.0" fill="rgb(210,110,33)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="127.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.io.WritableUtils.readCompressedString (3 samples, 1.27%)</title><rect x="845.0" y="309" width="15.0" height="15.0" fill="rgb(226,215,16)" rx="2" ry="2" />
+    <text text-anchor="" x="848.00" y="319.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.net.URLClassLoader$1.run (3 samples, 1.27%)</title><rect x="875.0" y="69" width="15.0" height="15.0" fill="rgb(229,66,20)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="79.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.lang.reflect.Proxy$ProxyClassFactory.apply (3 samples, 1.27%)</title><rect x="875.0" y="309" width="15.0" height="15.0" fill="rgb(205,179,53)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="319.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.parquet.hadoop.ParquetFileReader.readFooter (15 samples, 6.36%)</title><rect x="875.0" y="741" width="75.0" height="15.0" fill="rgb(240,177,31)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="751.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.apac..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.spark_project.guava.cache.LocalCache$LoadingValueReference.loadFuture (3 samples, 1.27%)</title><rect x="1160.0" y="933" width="15.0" height="15.0" fill="rgb(238,225,2)" rx="2" ry="2" />
+    <text text-anchor="" x="1163.00" y="943.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.util.Utils$.tryWithSafeFinally (3 samples, 1.27%)</title><rect x="845.0" y="613" width="15.0" height="15.0" fill="rgb(235,140,9)" rx="2" ry="2" />
+    <text text-anchor="" x="848.00" y="623.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.codehaus.janino.ClassBodyEvaluator.cook (3 samples, 1.27%)</title><rect x="1160.0" y="837" width="15.0" height="15.0" fill="rgb(235,196,27)" rx="2" ry="2" />
+    <text text-anchor="" x="1163.00" y="847.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.execution.datasources.parquet.VectorizedParquetRecordReader.nextKeyValue (15 samples, 6.36%)</title><rect x="950.0" y="821" width="75.0" height="15.0" fill="rgb(227,2,11)" rx="2" ry="2" />
+    <text text-anchor="" x="953.00" y="831.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.apac..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.io.BufferedOutputStream.flushBuffer (3 samples, 1.27%)</title><rect x="130.0" y="869" width="15.0" height="15.0" fill="rgb(206,155,35)" rx="2" ry="2" />
+    <text text-anchor="" x="133.00" y="879.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.execution.datasources.parquet.VectorizedRleValuesReader.readIntegers (3 samples, 1.27%)</title><rect x="1010.0" y="757" width="15.0" height="15.0" fill="rgb(220,148,17)" rx="2" ry="2" />
+    <text text-anchor="" x="1013.00" y="767.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.execution.datasources.parquet.ParquetFileFormat$$anonfun$buildReaderWithPartitionValues$1.apply (24 samples, 10.17%)</title><rect x="830.0" y="805" width="120.0" height="15.0" fill="rgb(247,105,24)" rx="2" ry="2" />
+    <text text-anchor="" x="833.00" y="815.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.apache.spa..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.util.SerializableConfiguration$$anonfun$readObject$1.apply (3 samples, 1.27%)</title><rect x="845.0" y="389" width="15.0" height="15.0" fill="rgb(219,95,7)" rx="2" ry="2" />
+    <text text-anchor="" x="848.00" y="399.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.lang.Class.privateGetDeclaredMethods (3 samples, 1.27%)</title><rect x="875.0" y="197" width="15.0" height="15.0" fill="rgb(244,146,38)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>sun.nio.ch.FileChannelImpl.transferTo (6 samples, 2.54%)</title><rect x="85.0" y="805" width="30.0" height="15.0" fill="rgb(240,1,37)" rx="2" ry="2" />
+    <text text-anchor="" x="88.00" y="815.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >su..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.parquet.column.values.bitpacking.Packer.&lt;clinit&gt; (3 samples, 1.27%)</title><rect x="760.0" y="629" width="15.0" height="15.0" fill="rgb(242,56,50)" rx="2" ry="2" />
+    <text text-anchor="" x="763.00" y="639.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.codehaus.commons.compiler.Cookable.cook (3 samples, 1.27%)</title><rect x="1160.0" y="869" width="15.0" height="15.0" fill="rgb(234,61,41)" rx="2" ry="2" />
+    <text text-anchor="" x="1163.00" y="879.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.fs.FileSystemLinkResolver.resolve (12 samples, 5.08%)</title><rect x="890.0" y="693" width="60.0" height="15.0" fill="rgb(246,139,9)" rx="2" ry="2" />
+    <text text-anchor="" x="893.00" y="703.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.ap..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.io.DataInputStream.readFully (6 samples, 2.54%)</title><rect x="950.0" y="661" width="30.0" height="15.0" fill="rgb(205,119,43)" rx="2" ry="2" />
+    <text text-anchor="" x="953.00" y="671.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >ja..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.io.retry.RetryInvocationHandler$Call.invokeOnce (12 samples, 5.08%)</title><rect x="890.0" y="597" width="60.0" height="15.0" fill="rgb(212,162,20)" rx="2" ry="2" />
+    <text text-anchor="" x="893.00" y="607.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.ap..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.fs.FileSystem$Cache.get (3 samples, 1.27%)</title><rect x="875.0" y="677" width="15.0" height="15.0" fill="rgb(225,131,46)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="687.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.broadcast.TorrentBroadcast.getValue (3 samples, 1.27%)</title><rect x="25.0" y="933" width="15.0" height="15.0" fill="rgb(208,176,54)" rx="2" ry="2" />
+    <text text-anchor="" x="28.00" y="943.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.ipc.ProtobufRpcEngine$Invoker.getReturnProtoType (6 samples, 2.54%)</title><rect x="920.0" y="389" width="30.0" height="15.0" fill="rgb(213,117,12)" rx="2" ry="2" />
+    <text text-anchor="" x="923.00" y="399.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >or..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>net.jpountz.lz4.LZ4JNICompressor.compress (48 samples, 20.34%)</title><rect x="370.0" y="789" width="240.0" height="15.0" fill="rgb(207,154,8)" rx="2" ry="2" />
+    <text text-anchor="" x="373.00" y="799.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >net.jpountz.lz4.LZ4JNICompresso..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.io.BufferedOutputStream.&lt;init&gt; (3 samples, 1.27%)</title><rect x="1175.0" y="1029" width="15.0" height="15.0" fill="rgb(208,36,17)" rx="2" ry="2" />
+    <text text-anchor="" x="1178.00" y="1039.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.broadcast.TorrentBroadcast$$anonfun$readBroadcastBlock$1.apply (6 samples, 2.54%)</title><rect x="845.0" y="677" width="30.0" height="15.0" fill="rgb(252,67,43)" rx="2" ry="2" />
+    <text text-anchor="" x="848.00" y="687.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >or..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.fs.FileSystem.get (3 samples, 1.27%)</title><rect x="875.0" y="693" width="15.0" height="15.0" fill="rgb(248,206,34)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="703.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>sun.misc.Launcher$AppClassLoader.loadClass (3 samples, 1.27%)</title><rect x="875.0" y="149" width="15.0" height="15.0" fill="rgb(221,32,32)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="159.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.lang.reflect.Proxy.getProxyClass0 (3 samples, 1.27%)</title><rect x="875.0" y="357" width="15.0" height="15.0" fill="rgb(217,41,3)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="367.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.codehaus.janino.UnitCompiler.access$400 (3 samples, 1.27%)</title><rect x="1160.0" y="693" width="15.0" height="15.0" fill="rgb(239,50,52)" rx="2" ry="2" />
+    <text text-anchor="" x="1163.00" y="703.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.execution.datasources.FileScanRDD$$anon$1.org$apache$spark$sql$execution$datasources$FileScanRDD$$anon$$readCurrentFile (24 samples, 10.17%)</title><rect x="830.0" y="821" width="120.0" height="15.0" fill="rgb(253,161,30)" rx="2" ry="2" />
+    <text text-anchor="" x="833.00" y="831.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.apache.spa..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.io.UnixFileSystem.delete (6 samples, 2.54%)</title><rect x="55.0" y="901" width="30.0" height="15.0" fill="rgb(220,147,29)" rx="2" ry="2" />
+    <text text-anchor="" x="58.00" y="911.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >ja..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.network.netty.NettyBlockTransferService$$anon$2.createAndStart (3 samples, 1.27%)</title><rect x="25.0" y="645" width="15.0" height="15.0" fill="rgb(240,22,37)" rx="2" ry="2" />
+    <text text-anchor="" x="28.00" y="655.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.io.WritableUtils.readCompressedStringArray (3 samples, 1.27%)</title><rect x="845.0" y="325" width="15.0" height="15.0" fill="rgb(205,24,32)" rx="2" ry="2" />
+    <text text-anchor="" x="848.00" y="335.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.lang.reflect.Proxy$ProxyClassFactory.apply (3 samples, 1.27%)</title><rect x="875.0" y="293" width="15.0" height="15.0" fill="rgb(240,195,18)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="303.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.spark_project.guava.cache.LocalCache$LocalLoadingCache.get (3 samples, 1.27%)</title><rect x="1160.0" y="1029" width="15.0" height="15.0" fill="rgb(228,225,40)" rx="2" ry="2" />
+    <text text-anchor="" x="1163.00" y="1039.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.parquet.column.page.DataPageV1.accept (3 samples, 1.27%)</title><rect x="760.0" y="725" width="15.0" height="15.0" fill="rgb(234,130,23)" rx="2" ry="2" />
+    <text text-anchor="" x="763.00" y="735.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.codehaus.janino.UnitCompiler$2.visitPackageMemberClassDeclaration (3 samples, 1.27%)</title><rect x="1160.0" y="725" width="15.0" height="15.0" fill="rgb(229,46,38)" rx="2" ry="2" />
+    <text text-anchor="" x="1163.00" y="735.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.io.ByteArrayInputStream.read (5 samples, 2.12%)</title><rect x="805.0" y="645" width="25.0" height="15.0" fill="rgb(218,199,17)" rx="2" ry="2" />
+    <text text-anchor="" x="808.00" y="655.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >j..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.catalyst.expressions.GeneratedClass$SpecificUnsafeProjection.apply (18 samples, 7.63%)</title><rect x="1055.0" y="853" width="90.0" height="15.0" fill="rgb(228,227,53)" rx="2" ry="2" />
+    <text text-anchor="" x="1058.00" y="863.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.apache..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.catalyst.expressions.GeneratedClass$GeneratedIteratorForCodegenStage1.processNext (68 samples, 28.81%)</title><rect x="700.0" y="885" width="340.0" height="15.0" fill="rgb(225,58,23)" rx="2" ry="2" />
+    <text text-anchor="" x="703.00" y="895.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.apache.spark.sql.catalyst.expressions.Gene..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.log4j.AppenderSkeleton.doAppend (3 samples, 1.27%)</title><rect x="25.0" y="517" width="15.0" height="15.0" fill="rgb(213,108,1)" rx="2" ry="2" />
+    <text text-anchor="" x="28.00" y="527.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.io.DataInputStream.readFully (6 samples, 2.54%)</title><rect x="950.0" y="645" width="30.0" height="15.0" fill="rgb(215,3,40)" rx="2" ry="2" />
+    <text text-anchor="" x="953.00" y="655.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >ja..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>scala.Option.getOrElse (3 samples, 1.27%)</title><rect x="25.0" y="837" width="15.0" height="15.0" fill="rgb(212,158,17)" rx="2" ry="2" />
+    <text text-anchor="" x="28.00" y="847.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.execution.vectorized.OnHeapColumnVector.getInt (3 samples, 1.27%)</title><rect x="1025.0" y="869" width="15.0" height="15.0" fill="rgb(236,20,24)" rx="2" ry="2" />
+    <text text-anchor="" x="1028.00" y="879.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.parquet.hadoop.ParquetFileReader.readNextRowGroup (6 samples, 2.54%)</title><rect x="775.0" y="741" width="30.0" height="15.0" fill="rgb(241,208,30)" rx="2" ry="2" />
+    <text text-anchor="" x="778.00" y="751.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >or..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>sun.reflect.NativeMethodAccessorImpl.invoke0 (6 samples, 2.54%)</title><rect x="920.0" y="325" width="30.0" height="15.0" fill="rgb(242,167,27)" rx="2" ry="2" />
+    <text text-anchor="" x="923.00" y="335.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >su..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.ipc.ProtobufRpcEngine$Invoker.getReturnMessage (6 samples, 2.54%)</title><rect x="920.0" y="405" width="30.0" height="15.0" fill="rgb(207,112,53)" rx="2" ry="2" />
+    <text text-anchor="" x="923.00" y="415.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >or..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.io.BufferedOutputStream.write (66 samples, 27.97%)</title><rect x="295.0" y="869" width="330.0" height="15.0" fill="rgb(248,150,10)" rx="2" ry="2" />
+    <text text-anchor="" x="298.00" y="879.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >java.io.BufferedOutputStream.write</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.net.URLClassLoader.access$100 (3 samples, 1.27%)</title><rect x="830.0" y="661" width="15.0" height="15.0" fill="rgb(209,202,30)" rx="2" ry="2" />
+    <text text-anchor="" x="833.00" y="671.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.broadcast.TorrentBroadcast._value (3 samples, 1.27%)</title><rect x="25.0" y="917" width="15.0" height="15.0" fill="rgb(242,144,16)" rx="2" ry="2" />
+    <text text-anchor="" x="28.00" y="927.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.parquet.hadoop.ParquetFileReader$ConsecutiveChunkList.readAll (6 samples, 2.54%)</title><rect x="775.0" y="725" width="30.0" height="15.0" fill="rgb(228,183,53)" rx="2" ry="2" />
+    <text text-anchor="" x="778.00" y="735.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >or..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>com.sun.proxy.$Proxy14.getFileInfo (9 samples, 3.81%)</title><rect x="905.0" y="453" width="45.0" height="15.0" fill="rgb(249,67,38)" rx="2" ry="2" />
+    <text text-anchor="" x="908.00" y="463.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >com...</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.util.Utils$.tryWithSafeFinally (6 samples, 2.54%)</title><rect x="85.0" y="885" width="30.0" height="15.0" fill="rgb(224,109,45)" rx="2" ry="2" />
+    <text text-anchor="" x="88.00" y="895.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >or..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.util.Utils$$anonfun$copyStream$1.apply (6 samples, 2.54%)</title><rect x="85.0" y="869" width="30.0" height="15.0" fill="rgb(210,22,17)" rx="2" ry="2" />
+    <text text-anchor="" x="88.00" y="879.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >or..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.broadcast.TorrentBroadcast$$anonfun$readBroadcastBlock$1$$anonfun$apply$2.apply (3 samples, 1.27%)</title><rect x="25.0" y="821" width="15.0" height="15.0" fill="rgb(216,4,21)" rx="2" ry="2" />
+    <text text-anchor="" x="28.00" y="831.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.unsafe.hash.Murmur3_x86_32.mixH1 (3 samples, 1.27%)</title><rect x="1130.0" y="821" width="15.0" height="15.0" fill="rgb(253,83,11)" rx="2" ry="2" />
+    <text text-anchor="" x="1133.00" y="831.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.parquet.column.page.DataPageV1.accept (6 samples, 2.54%)</title><rect x="950.0" y="757" width="30.0" height="15.0" fill="rgb(234,138,36)" rx="2" ry="2" />
+    <text text-anchor="" x="953.00" y="767.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >or..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.ipc.Client.getConnection (3 samples, 1.27%)</title><rect x="905.0" y="373" width="15.0" height="15.0" fill="rgb(237,166,13)" rx="2" ry="2" />
+    <text text-anchor="" x="908.00" y="383.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.conf.Configuration.getTrimmed (3 samples, 1.27%)</title><rect x="980.0" y="645" width="15.0" height="15.0" fill="rgb(227,133,39)" rx="2" ry="2" />
+    <text text-anchor="" x="983.00" y="655.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.lang.ClassLoader.defineClass1 (3 samples, 1.27%)</title><rect x="830.0" y="597" width="15.0" height="15.0" fill="rgb(212,51,22)" rx="2" ry="2" />
+    <text text-anchor="" x="833.00" y="607.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.lang.ClassLoader.defineClass (3 samples, 1.27%)</title><rect x="830.0" y="613" width="15.0" height="15.0" fill="rgb(208,85,9)" rx="2" ry="2" />
+    <text text-anchor="" x="833.00" y="623.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>sun.nio.ch.IOUtil.writeFromNativeBuffer (6 samples, 2.54%)</title><rect x="85.0" y="741" width="30.0" height="15.0" fill="rgb(232,14,15)" rx="2" ry="2" />
+    <text text-anchor="" x="88.00" y="751.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >su..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.execution.datasources.parquet.VectorizedParquetRecordReader.checkEndOfRowGroup (11 samples, 4.66%)</title><rect x="775.0" y="757" width="55.0" height="15.0" fill="rgb(252,191,42)" rx="2" ry="2" />
+    <text text-anchor="" x="778.00" y="767.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.a..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.io.ObjectInputStream.readObject0 (3 samples, 1.27%)</title><rect x="845.0" y="549" width="15.0" height="15.0" fill="rgb(221,48,45)" rx="2" ry="2" />
+    <text text-anchor="" x="848.00" y="559.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.hdfs.ByteArrayStrategy.readFromBlock (6 samples, 2.54%)</title><rect x="775.0" y="629" width="30.0" height="15.0" fill="rgb(221,0,10)" rx="2" ry="2" />
+    <text text-anchor="" x="778.00" y="639.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >or..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.util.Utils$.copyStream (6 samples, 2.54%)</title><rect x="85.0" y="901" width="30.0" height="15.0" fill="rgb(250,110,2)" rx="2" ry="2" />
+    <text text-anchor="" x="88.00" y="911.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >or..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.hdfs.protocol.proto.HdfsProtos$HdfsFileStatusProto.initFields (3 samples, 1.27%)</title><rect x="935.0" y="261" width="15.0" height="15.0" fill="rgb(208,211,34)" rx="2" ry="2" />
+    <text text-anchor="" x="938.00" y="271.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>net.jpountz.lz4.LZ4BlockOutputStream.flushBufferedData (48 samples, 20.34%)</title><rect x="370.0" y="821" width="240.0" height="15.0" fill="rgb(253,19,45)" rx="2" ry="2" />
+    <text text-anchor="" x="373.00" y="831.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >net.jpountz.lz4.LZ4BlockOutputS..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.parquet.column.values.dictionary.PlainValuesDictionary$PlainIntegerDictionary.&lt;init&gt; (5 samples, 2.12%)</title><rect x="805.0" y="693" width="25.0" height="15.0" fill="rgb(218,121,47)" rx="2" ry="2" />
+    <text text-anchor="" x="808.00" y="703.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >o..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.io.BufferedOutputStream.flush (3 samples, 1.27%)</title><rect x="130.0" y="885" width="15.0" height="15.0" fill="rgb(209,57,19)" rx="2" ry="2" />
+    <text text-anchor="" x="133.00" y="895.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.parquet.column.page.DataPageV1.accept (3 samples, 1.27%)</title><rect x="980.0" y="741" width="15.0" height="15.0" fill="rgb(251,198,28)" rx="2" ry="2" />
+    <text text-anchor="" x="983.00" y="751.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.net.URLClassLoader.defineClass (3 samples, 1.27%)</title><rect x="830.0" y="645" width="15.0" height="15.0" fill="rgb(228,151,47)" rx="2" ry="2" />
+    <text text-anchor="" x="833.00" y="655.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.execution.datasources.parquet.VectorizedColumnReader.access$000 (6 samples, 2.54%)</title><rect x="950.0" y="709" width="30.0" height="15.0" fill="rgb(205,195,10)" rx="2" ry="2" />
+    <text text-anchor="" x="953.00" y="719.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >or..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.execution.datasources.parquet.VectorizedColumnReader$1.visit (3 samples, 1.27%)</title><rect x="760.0" y="693" width="15.0" height="15.0" fill="rgb(230,130,42)" rx="2" ry="2" />
+    <text text-anchor="" x="763.00" y="703.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.lang.Class.getMethods (3 samples, 1.27%)</title><rect x="875.0" y="245" width="15.0" height="15.0" fill="rgb(227,201,18)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="255.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>com.sun.proxy.$Proxy15.getFileInfo (12 samples, 5.08%)</title><rect x="890.0" y="629" width="60.0" height="15.0" fill="rgb(242,134,28)" rx="2" ry="2" />
+    <text text-anchor="" x="893.00" y="639.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >com.su..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>sun.misc.Launcher$AppClassLoader.loadClass (3 samples, 1.27%)</title><rect x="830.0" y="757" width="15.0" height="15.0" fill="rgb(214,108,48)" rx="2" ry="2" />
+    <text text-anchor="" x="833.00" y="767.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.ipc.protobuf.IpcConnectionContextProtos$IpcConnectionContextProto.&lt;clinit&gt; (3 samples, 1.27%)</title><rect x="905.0" y="293" width="15.0" height="15.0" fill="rgb(246,104,24)" rx="2" ry="2" />
+    <text text-anchor="" x="908.00" y="303.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.lang.reflect.WeakCache$Factory.get (3 samples, 1.27%)</title><rect x="875.0" y="325" width="15.0" height="15.0" fill="rgb(242,49,38)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="335.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.hdfs.DFSInputStream.readWithStrategy (6 samples, 2.54%)</title><rect x="775.0" y="661" width="30.0" height="15.0" fill="rgb(244,142,15)" rx="2" ry="2" />
+    <text text-anchor="" x="778.00" y="671.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >or..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.storage.BlockManager.putSingle (3 samples, 1.27%)</title><rect x="860.0" y="629" width="15.0" height="15.0" fill="rgb(246,161,29)" rx="2" ry="2" />
+    <text text-anchor="" x="863.00" y="639.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.execution.exchange.ShuffleExchangeExec$$anonfun$org$apache$spark$sql$execution$exchange$ShuffleExchangeExec$$getPartitionKeyExtractor$1$2.apply (18 samples, 7.63%)</title><rect x="1055.0" y="885" width="90.0" height="15.0" fill="rgb(221,36,39)" rx="2" ry="2" />
+    <text text-anchor="" x="1058.00" y="895.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.apache..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.io.retry.RetryInvocationHandler.&lt;init&gt; (3 samples, 1.27%)</title><rect x="875.0" y="517" width="15.0" height="15.0" fill="rgb(250,3,22)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="527.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.lang.reflect.Proxy.newProxyInstance (3 samples, 1.27%)</title><rect x="875.0" y="373" width="15.0" height="15.0" fill="rgb(214,159,26)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="383.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.log4j.Category.forcedLog (3 samples, 1.27%)</title><rect x="25.0" y="565" width="15.0" height="15.0" fill="rgb(221,126,2)" rx="2" ry="2" />
+    <text text-anchor="" x="28.00" y="575.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.broadcast.TorrentBroadcast$$anonfun$8.apply (3 samples, 1.27%)</title><rect x="845.0" y="597" width="15.0" height="15.0" fill="rgb(221,84,27)" rx="2" ry="2" />
+    <text text-anchor="" x="848.00" y="607.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.execution.datasources.parquet.VectorizedColumnReader$1.visit (6 samples, 2.54%)</title><rect x="950.0" y="741" width="30.0" height="15.0" fill="rgb(205,113,49)" rx="2" ry="2" />
+    <text text-anchor="" x="953.00" y="751.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >or..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.execution.datasources.FileScanRDD$$anon$1.hasNext (14 samples, 5.93%)</title><rect x="760.0" y="821" width="70.0" height="15.0" fill="rgb(246,26,51)" rx="2" ry="2" />
+    <text text-anchor="" x="763.00" y="831.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.apa..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>sun.nio.ch.FileChannelImpl.readInternal (6 samples, 2.54%)</title><rect x="775.0" y="517" width="30.0" height="15.0" fill="rgb(225,131,47)" rx="2" ry="2" />
+    <text text-anchor="" x="778.00" y="527.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >su..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.codehaus.janino.UnitCompiler.compileUnit (3 samples, 1.27%)</title><rect x="1160.0" y="773" width="15.0" height="15.0" fill="rgb(226,103,10)" rx="2" ry="2" />
+    <text text-anchor="" x="1163.00" y="783.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.hdfs.server.namenode.ha.ClientHAProxyFactory.createProxy (3 samples, 1.27%)</title><rect x="875.0" y="437" width="15.0" height="15.0" fill="rgb(221,44,35)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="447.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.util.SizeEstimator$.estimate (3 samples, 1.27%)</title><rect x="860.0" y="469" width="15.0" height="15.0" fill="rgb(207,138,19)" rx="2" ry="2" />
+    <text text-anchor="" x="863.00" y="479.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider.getProxy (3 samples, 1.27%)</title><rect x="875.0" y="469" width="15.0" height="15.0" fill="rgb(232,189,48)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="479.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.util.Utils$.copyFileStreamNIO (6 samples, 2.54%)</title><rect x="85.0" y="821" width="30.0" height="15.0" fill="rgb(249,24,25)" rx="2" ry="2" />
+    <text text-anchor="" x="88.00" y="831.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >or..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.execution.datasources.parquet.SpecificParquetRecordReaderBase.initialize (15 samples, 6.36%)</title><rect x="875.0" y="757" width="75.0" height="15.0" fill="rgb(241,4,36)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="767.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.apac..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.lang.reflect.WeakCache.get (3 samples, 1.27%)</title><rect x="875.0" y="341" width="15.0" height="15.0" fill="rgb(209,183,21)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="351.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.fs.FileSystem.createFileSystem (3 samples, 1.27%)</title><rect x="875.0" y="629" width="15.0" height="15.0" fill="rgb(220,121,42)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="639.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.util.concurrent.ThreadPoolExecutor$Worker.run (227 samples, 96.19%)</title><rect x="25.0" y="1045" width="1135.0" height="15.0" fill="rgb(251,212,21)" rx="2" ry="2" />
+    <text text-anchor="" x="28.00" y="1055.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >java.util.concurrent.ThreadPoolExecutor$Worker.run</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.execution.datasources.parquet.VectorizedColumnReader.readPage (3 samples, 1.27%)</title><rect x="760.0" y="741" width="15.0" height="15.0" fill="rgb(236,38,18)" rx="2" ry="2" />
+    <text text-anchor="" x="763.00" y="751.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.log4j.helpers.QuietWriter.flush (3 samples, 1.27%)</title><rect x="25.0" y="469" width="15.0" height="15.0" fill="rgb(224,32,32)" rx="2" ry="2" />
+    <text text-anchor="" x="28.00" y="479.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.execution.WholeStageCodegenExec$$anonfun$10$$anon$1.hasNext (74 samples, 31.36%)</title><rect x="670.0" y="917" width="370.0" height="15.0" fill="rgb(206,212,40)" rx="2" ry="2" />
+    <text text-anchor="" x="673.00" y="927.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.apache.spark.sql.execution.WholeStageCodegenEx..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>net.jpountz.lz4.LZ4BlockOutputStream.&lt;init&gt; (3 samples, 1.27%)</title><rect x="655.0" y="837" width="15.0" height="15.0" fill="rgb(226,72,48)" rx="2" ry="2" />
+    <text text-anchor="" x="658.00" y="847.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.parquet.column.values.bitpacking.Packer.getIntPackerFactory (3 samples, 1.27%)</title><rect x="760.0" y="613" width="15.0" height="15.0" fill="rgb(205,163,6)" rx="2" ry="2" />
+    <text text-anchor="" x="763.00" y="623.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.catalyst.expressions.codegen.CodeGenerator$.org$apache$spark$sql$catalyst$expressions$codegen$CodeGenerator$$doCompile (3 samples, 1.27%)</title><rect x="1160.0" y="885" width="15.0" height="15.0" fill="rgb(246,78,32)" rx="2" ry="2" />
+    <text text-anchor="" x="1163.00" y="895.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.catalyst.expressions.codegen.CodeGenerator$.compile (3 samples, 1.27%)</title><rect x="1160.0" y="1045" width="15.0" height="15.0" fill="rgb(209,141,9)" rx="2" ry="2" />
+    <text text-anchor="" x="1163.00" y="1055.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.spark_project.guava.cache.LocalCache.get (3 samples, 1.27%)</title><rect x="1160.0" y="997" width="15.0" height="15.0" fill="rgb(205,22,43)" rx="2" ry="2" />
+    <text text-anchor="" x="1163.00" y="1007.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.execution.datasources.parquet.VectorizedColumnReader.readPageV1 (3 samples, 1.27%)</title><rect x="760.0" y="661" width="15.0" height="15.0" fill="rgb(252,4,21)" rx="2" ry="2" />
+    <text text-anchor="" x="763.00" y="671.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.ipc.Client$Connection.setupIOstreams (3 samples, 1.27%)</title><rect x="905.0" y="341" width="15.0" height="15.0" fill="rgb(211,161,53)" rx="2" ry="2" />
+    <text text-anchor="" x="908.00" y="351.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>net.jpountz.lz4.LZ4Compressor.compress (48 samples, 20.34%)</title><rect x="370.0" y="805" width="240.0" height="15.0" fill="rgb(221,70,54)" rx="2" ry="2" />
+    <text text-anchor="" x="373.00" y="815.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >net.jpountz.lz4.LZ4Compressor.c..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.parquet.column.values.plain.PlainValuesReader$IntegerPlainValuesReader.readInteger (5 samples, 2.12%)</title><rect x="805.0" y="677" width="25.0" height="15.0" fill="rgb(248,2,53)" rx="2" ry="2" />
+    <text text-anchor="" x="808.00" y="687.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >o..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.codehaus.janino.SimpleCompiler.compileToClassLoader (3 samples, 1.27%)</title><rect x="1160.0" y="805" width="15.0" height="15.0" fill="rgb(210,3,41)" rx="2" ry="2" />
+    <text text-anchor="" x="1163.00" y="815.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.io.retry.RetryInvocationHandler$ProxyDescriptor.&lt;init&gt; (3 samples, 1.27%)</title><rect x="875.0" y="485" width="15.0" height="15.0" fill="rgb(224,197,14)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="495.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.storage.memory.MemoryStore.putIteratorAsValues (3 samples, 1.27%)</title><rect x="860.0" y="533" width="15.0" height="15.0" fill="rgb(230,161,44)" rx="2" ry="2" />
+    <text text-anchor="" x="863.00" y="543.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.codehaus.janino.UnitCompiler.findTypeByFullyQualifiedName (3 samples, 1.27%)</title><rect x="1160.0" y="629" width="15.0" height="15.0" fill="rgb(236,99,41)" rx="2" ry="2" />
+    <text text-anchor="" x="1163.00" y="639.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>sun.misc.ProxyGenerator.generateProxyClass (3 samples, 1.27%)</title><rect x="875.0" y="277" width="15.0" height="15.0" fill="rgb(233,132,4)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="287.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>net.jpountz.lz4.LZ4BlockOutputStream.write (54 samples, 22.88%)</title><rect x="355.0" y="837" width="270.0" height="15.0" fill="rgb(207,68,46)" rx="2" ry="2" />
+    <text text-anchor="" x="358.00" y="847.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >net.jpountz.lz4.LZ4BlockOutputStream..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>sun.reflect.DelegatingMethodAccessorImpl.invoke (12 samples, 5.08%)</title><rect x="890.0" y="517" width="60.0" height="15.0" fill="rgb(243,141,3)" rx="2" ry="2" />
+    <text text-anchor="" x="893.00" y="527.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >sun.re..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.hdfs.client.impl.BlockReaderLocal.fillDataBuf (6 samples, 2.54%)</title><rect x="775.0" y="581" width="30.0" height="15.0" fill="rgb(245,160,40)" rx="2" ry="2" />
+    <text text-anchor="" x="778.00" y="591.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >or..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.net.URLClassLoader$1.run (3 samples, 1.27%)</title><rect x="830.0" y="677" width="15.0" height="15.0" fill="rgb(210,19,7)" rx="2" ry="2" />
+    <text text-anchor="" x="833.00" y="687.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.io.retry.RetryInvocationHandler.invoke (12 samples, 5.08%)</title><rect x="890.0" y="613" width="60.0" height="15.0" fill="rgb(254,82,18)" rx="2" ry="2" />
+    <text text-anchor="" x="893.00" y="623.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.ap..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.io.OutputStreamWriter.flush (3 samples, 1.27%)</title><rect x="25.0" y="453" width="15.0" height="15.0" fill="rgb(229,46,34)" rx="2" ry="2" />
+    <text text-anchor="" x="28.00" y="463.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.execution.BufferedRowIterator.hasNext (74 samples, 31.36%)</title><rect x="670.0" y="901" width="370.0" height="15.0" fill="rgb(232,211,26)" rx="2" ry="2" />
+    <text text-anchor="" x="673.00" y="911.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.apache.spark.sql.execution.BufferedRowIterator..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.hdfs.DistributedFileSystem$29.doCall (12 samples, 5.08%)</title><rect x="890.0" y="677" width="60.0" height="15.0" fill="rgb(216,124,10)" rx="2" ry="2" />
+    <text text-anchor="" x="893.00" y="687.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.ap..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.io.UnixFileSystem.delete0 (6 samples, 2.54%)</title><rect x="55.0" y="885" width="30.0" height="15.0" fill="rgb(237,11,11)" rx="2" ry="2" />
+    <text text-anchor="" x="58.00" y="895.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >ja..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>net.jpountz.lz4.LZ4BlockOutputStream.write (3 samples, 1.27%)</title><rect x="130.0" y="853" width="15.0" height="15.0" fill="rgb(206,179,30)" rx="2" ry="2" />
+    <text text-anchor="" x="133.00" y="863.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.util.collection.SizeTracker$class.takeSample (3 samples, 1.27%)</title><rect x="860.0" y="485" width="15.0" height="15.0" fill="rgb(230,65,43)" rx="2" ry="2" />
+    <text text-anchor="" x="863.00" y="495.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.network.shuffle.RetryingBlockFetcher.start (3 samples, 1.27%)</title><rect x="25.0" y="677" width="15.0" height="15.0" fill="rgb(217,69,44)" rx="2" ry="2" />
+    <text text-anchor="" x="28.00" y="687.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>sun.reflect.DelegatingMethodAccessorImpl.invoke (3 samples, 1.27%)</title><rect x="845.0" y="469" width="15.0" height="15.0" fill="rgb(245,75,25)" rx="2" ry="2" />
+    <text text-anchor="" x="848.00" y="479.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.io.BufferedOutputStream.write (3 samples, 1.27%)</title><rect x="10.0" y="1045" width="15.0" height="15.0" fill="rgb(215,126,43)" rx="2" ry="2" />
+    <text text-anchor="" x="13.00" y="1055.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.ipc.ProtobufRpcEngine$Invoker.invoke (9 samples, 3.81%)</title><rect x="905.0" y="421" width="45.0" height="15.0" fill="rgb(245,67,9)" rx="2" ry="2" />
+    <text text-anchor="" x="908.00" y="431.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org...</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.io.ObjectStreamClass.invokeReadObject (3 samples, 1.27%)</title><rect x="845.0" y="501" width="15.0" height="15.0" fill="rgb(247,135,54)" rx="2" ry="2" />
+    <text text-anchor="" x="848.00" y="511.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.execution.vectorized.OnHeapColumnVector.getDictId (3 samples, 1.27%)</title><rect x="1025.0" y="853" width="15.0" height="15.0" fill="rgb(227,200,32)" rx="2" ry="2" />
+    <text text-anchor="" x="1028.00" y="863.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>sun.nio.ch.FileDispatcherImpl.pread0 (6 samples, 2.54%)</title><rect x="775.0" y="453" width="30.0" height="15.0" fill="rgb(231,121,41)" rx="2" ry="2" />
+    <text text-anchor="" x="778.00" y="463.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >su..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.catalyst.expressions.codegen.CodeGenerator$$anon$1.load (3 samples, 1.27%)</title><rect x="1160.0" y="917" width="15.0" height="15.0" fill="rgb(208,2,53)" rx="2" ry="2" />
+    <text text-anchor="" x="1163.00" y="927.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.ipc.ProtobufRpcEngine$Invoker.invoke (9 samples, 3.81%)</title><rect x="905.0" y="437" width="45.0" height="15.0" fill="rgb(227,49,10)" rx="2" ry="2" />
+    <text text-anchor="" x="908.00" y="447.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org...</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.broadcast.TorrentBroadcast$$anonfun$org$apache$spark$broadcast$TorrentBroadcast$$readBlocks$1.apply$mcVI$sp (3 samples, 1.27%)</title><rect x="25.0" y="741" width="15.0" height="15.0" fill="rgb(238,95,52)" rx="2" ry="2" />
+    <text text-anchor="" x="28.00" y="751.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.io.File.delete (6 samples, 2.54%)</title><rect x="55.0" y="917" width="30.0" height="15.0" fill="rgb(239,89,0)" rx="2" ry="2" />
+    <text text-anchor="" x="58.00" y="927.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >ja..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>net.jpountz.lz4.LZ4BlockOutputStream.flushBufferedData (3 samples, 1.27%)</title><rect x="130.0" y="837" width="15.0" height="15.0" fill="rgb(231,23,40)" rx="2" ry="2" />
+    <text text-anchor="" x="133.00" y="847.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.ipc.Client.call (3 samples, 1.27%)</title><rect x="905.0" y="405" width="15.0" height="15.0" fill="rgb(252,73,4)" rx="2" ry="2" />
+    <text text-anchor="" x="908.00" y="415.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.codehaus.janino.UnitCompiler.getSingleTypeImport (3 samples, 1.27%)</title><rect x="1160.0" y="645" width="15.0" height="15.0" fill="rgb(221,182,53)" rx="2" ry="2" />
+    <text text-anchor="" x="1163.00" y="655.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.broadcast.TorrentBroadcast$$anonfun$readBroadcastBlock$1$$anonfun$apply$2.apply (6 samples, 2.54%)</title><rect x="845.0" y="645" width="30.0" height="15.0" fill="rgb(229,97,27)" rx="2" ry="2" />
+    <text text-anchor="" x="848.00" y="655.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >or..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.storage.BlockManager.doPutIterator (3 samples, 1.27%)</title><rect x="860.0" y="597" width="15.0" height="15.0" fill="rgb(217,30,14)" rx="2" ry="2" />
+    <text text-anchor="" x="863.00" y="607.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.catalyst.expressions.codegen.CodeGenerator$$anon$1.load (3 samples, 1.27%)</title><rect x="1160.0" y="901" width="15.0" height="15.0" fill="rgb(208,2,51)" rx="2" ry="2" />
+    <text text-anchor="" x="1163.00" y="911.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.parquet.hadoop.codec.SnappyCodec.createInputStream (3 samples, 1.27%)</title><rect x="980.0" y="677" width="15.0" height="15.0" fill="rgb(218,17,20)" rx="2" ry="2" />
+    <text text-anchor="" x="983.00" y="687.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>sun.misc.URLClassPath.getNextLoader (3 samples, 1.27%)</title><rect x="875.0" y="37" width="15.0" height="15.0" fill="rgb(221,226,39)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="47.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.hdfs.DFSClient.&lt;init&gt; (3 samples, 1.27%)</title><rect x="875.0" y="597" width="15.0" height="15.0" fill="rgb(207,161,25)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="607.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.broadcast.TorrentBroadcast.readBroadcastBlock (3 samples, 1.27%)</title><rect x="25.0" y="885" width="15.0" height="15.0" fill="rgb(238,154,35)" rx="2" ry="2" />
+    <text text-anchor="" x="28.00" y="895.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.ipc.Client$Connection.writeConnectionContext (3 samples, 1.27%)</title><rect x="905.0" y="325" width="15.0" height="15.0" fill="rgb(232,176,44)" rx="2" ry="2" />
+    <text text-anchor="" x="908.00" y="335.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.storage.DiskBlockObjectWriter.initialize (3 samples, 1.27%)</title><rect x="1175.0" y="1061" width="15.0" height="15.0" fill="rgb(253,81,50)" rx="2" ry="2" />
+    <text text-anchor="" x="1178.00" y="1071.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.codehaus.janino.UnitCompiler.compile2 (3 samples, 1.27%)</title><rect x="1160.0" y="677" width="15.0" height="15.0" fill="rgb(231,34,3)" rx="2" ry="2" />
+    <text text-anchor="" x="1163.00" y="687.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.util.Utils$$anonfun$copyStream$1.apply$mcJ$sp (6 samples, 2.54%)</title><rect x="85.0" y="837" width="30.0" height="15.0" fill="rgb(229,188,19)" rx="2" ry="2" />
+    <text text-anchor="" x="88.00" y="847.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >or..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>sun.nio.ch.IOUtil.readIntoNativeBuffer (6 samples, 2.54%)</title><rect x="775.0" y="485" width="30.0" height="15.0" fill="rgb(231,2,1)" rx="2" ry="2" />
+    <text text-anchor="" x="778.00" y="495.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >su..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>sun.nio.ch.IOUtil.read (6 samples, 2.54%)</title><rect x="775.0" y="501" width="30.0" height="15.0" fill="rgb(219,45,16)" rx="2" ry="2" />
+    <text text-anchor="" x="778.00" y="511.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >su..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.hdfs.protocol.proto.ClientNamenodeProtocolProtos$GetFileInfoResponseProto.initFields (6 samples, 2.54%)</title><rect x="920.0" y="293" width="30.0" height="15.0" fill="rgb(224,226,21)" rx="2" ry="2" />
+    <text text-anchor="" x="923.00" y="303.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >or..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>net.jpountz.lz4.LZ4JNI.LZ4_compress_limitedOutput (48 samples, 20.34%)</title><rect x="370.0" y="773" width="240.0" height="15.0" fill="rgb(206,94,3)" rx="2" ry="2" />
+    <text text-anchor="" x="373.00" y="783.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >net.jpountz.lz4.LZ4JNI.LZ4_comp..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.lang.Class.getDeclaredMethods0 (3 samples, 1.27%)</title><rect x="875.0" y="181" width="15.0" height="15.0" fill="rgb(224,82,40)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="191.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.broadcast.Broadcast.value (3 samples, 1.27%)</title><rect x="25.0" y="949" width="15.0" height="15.0" fill="rgb(216,136,34)" rx="2" ry="2" />
+    <text text-anchor="" x="28.00" y="959.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.broadcast.TorrentBroadcast$$anonfun$readBroadcastBlock$1.apply (3 samples, 1.27%)</title><rect x="25.0" y="853" width="15.0" height="15.0" fill="rgb(244,75,45)" rx="2" ry="2" />
+    <text text-anchor="" x="28.00" y="863.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>sun.misc.URLClassPath.getResource (3 samples, 1.27%)</title><rect x="875.0" y="53" width="15.0" height="15.0" fill="rgb(205,106,42)" rx="2" ry="2" />
+    <text text-anchor="" x="878.00" y="63.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.execution.exchange.ShuffleExchangeExec$$anonfun$4$$anonfun$apply$3.apply (21 samples, 8.90%)</title><rect x="1055.0" y="901" width="105.0" height="15.0" fill="rgb(208,198,49)" rx="2" ry="2" />
+    <text text-anchor="" x="1058.00" y="911.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.apache.s..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.parquet.hadoop.ColumnChunkPageReadStore$ColumnChunkPageReader$1.visit (3 samples, 1.27%)</title><rect x="980.0" y="709" width="15.0" height="15.0" fill="rgb(233,108,33)" rx="2" ry="2" />
+    <text text-anchor="" x="983.00" y="719.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.execution.datasources.parquet.VectorizedColumnReader.access$000 (3 samples, 1.27%)</title><rect x="760.0" y="677" width="15.0" height="15.0" fill="rgb(227,208,50)" rx="2" ry="2" />
+    <text text-anchor="" x="763.00" y="687.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>net.jpountz.lz4.LZ4BlockOutputStream.&lt;init&gt; (3 samples, 1.27%)</title><rect x="655.0" y="853" width="15.0" height="15.0" fill="rgb(235,207,15)" rx="2" ry="2" />
+    <text text-anchor="" x="658.00" y="863.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>all (236 samples, 100%)</title><rect x="10.0" y="1077" width="1180.0" height="15.0" fill="rgb(243,21,49)" rx="2" ry="2" />
+    <text text-anchor="" x="13.00" y="1087.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.io.DataOutputStream.writeInt (3 samples, 1.27%)</title><rect x="10.0" y="1061" width="15.0" height="15.0" fill="rgb(229,203,5)" rx="2" ry="2" />
+    <text text-anchor="" x="13.00" y="1071.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.spark.sql.execution.datasources.parquet.VectorizedParquetRecordReader.nextKeyValue (14 samples, 5.93%)</title><rect x="760.0" y="789" width="70.0" height="15.0" fill="rgb(237,197,7)" rx="2" ry="2" />
+    <text text-anchor="" x="763.00" y="799.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >org.apa..</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.codehaus.janino.UnitCompiler$2.visitPackageMemberClassDeclaration (3 samples, 1.27%)</title><rect x="1160.0" y="709" width="15.0" height="15.0" fill="rgb(234,104,24)" rx="2" ry="2" />
+    <text text-anchor="" x="1163.00" y="719.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>java.util.concurrent.ThreadPoolExecutor.runWorker (227 samples, 96.19%)</title><rect x="25.0" y="1029" width="1135.0" height="15.0" fill="rgb(231,172,22)" rx="2" ry="2" />
+    <text text-anchor="" x="28.00" y="1039.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >java.util.concurrent.ThreadPoolExecutor.runWorker</text>
+  </g>
+  <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+    <title>org.apache.hadoop.hdfs.DFSInputStream.read (6 samples, 2.54%)</title><rect x="775.0" y="677" width="30.0" height="15.0" fill="rgb(212,3,31)" rx="2" ry="2" />
+    <text text-anchor="" x="778.00" y="687.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >or..</text>
+  </g>
+</svg>

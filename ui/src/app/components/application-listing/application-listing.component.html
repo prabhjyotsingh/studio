@@ -1,0 +1,167 @@
+<!--
+  ~
+  ~  CLOUDERA DATAPLANE SERVICE AND ITS CONSTITUENT SERVICES
+  ~
+  ~  (c) 2016-2018 Cloudera, Inc. All rights reserved.
+  ~
+  ~  This code is provided to you pursuant to your written agreement with Cloudera, which may be the terms of the
+  ~  Affero General Public License version 3 (AGPLv3), or pursuant to a written agreement with a third party authorized
+  ~  to distribute this code.  If you do not have a written agreement with Cloudera or with an authorized and
+  ~  properly licensed third party, you do not have any rights to this code.
+  ~
+  ~  If this code is provided to you under the terms of the AGPLv3:
+  ~  (A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY KIND;
+  ~  (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT
+  ~    LIMITED TO IMPLIED WARRANTIES OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE;
+  ~  (C) CLOUDERA IS NOT LIABLE TO YOU, AND WILL NOT DEFEND, INDEMNIFY, OR HOLD YOU HARMLESS FOR ANY CLAIMS ARISING
+  ~    FROM OR RELATED TO THE CODE; AND
+  ~  (D) WITH RESPECT TO YOUR EXERCISE OF ANY RIGHTS GRANTED TO YOU FOR THE CODE, CLOUDERA IS NOT LIABLE FOR ANY
+  ~    DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, PUNITIVE OR CONSEQUENTIAL DAMAGES INCLUDING, BUT NOT LIMITED TO,
+  ~    DAMAGES RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF BUSINESS ADVANTAGE OR UNAVAILABILITY,
+  ~    OR LOSS OR CORRUPTION OF DATA.
+  ~
+  -->
+
+<div id="chartContainer" class="mdl-page__container">
+  <div class="mdl-grid  mdl-padded--adjustment">
+    <div class="mdl-cell mdl-cell--12-col mdl-cell--12-col-tablet mdl-color--white">
+      <div class="sla_violation">
+        <h6></h6>
+        <div>
+          <!--
+          <div class="sla_metrics donut_container">
+              <des-donut
+                [datum]="pieChartData"
+                [graphWidth]="180"
+                [showLegend]="true"
+                [innerRadius]="68"
+                [textOnPie]="false"
+                [pieCaption]="'0/50'"
+                [pieSubCaption]="'All Violations'"
+              ></des-donut>
+            </div>
+
+            <div class="sla_metrics sla_table">
+              <div>
+                <table>
+                  <tr>
+                    <td>Resource</td>
+                    <td>0</td>
+                  </tr>
+                  <tr>
+                    <td>Failures</td>
+                    <td>0</td>
+                  </tr>
+                  <tr>
+                    <td>Timeliness</td>
+                    <td>0</td>
+                  </tr>
+                </table>
+              </div>
+            </div>
+            <div class="sla_metrics donut_container">
+                <des-donut
+                [datum]="pieChartData"
+                [graphWidth]="180"
+                [showLegend]="false"
+                [innerRadius]="68"
+                [textOnPie]="false"
+                [pieCaption]="'0'"
+                [pieSubCaption]="'Resource'"
+              ></des-donut>
+            </div>
+            -->
+          <div class="sla_metrics" *ngIf="userData.length>0">
+            <des-donut
+              [datum]="userData"
+              [graphWidth]="150"
+              [showLegend]="false"
+              [innerRadius]="0"
+              [textOnPie]="false"
+              [sectionGap]="0.01"
+              [showTooltip]="true"
+              [colors]="pieChartColor">
+            </des-donut>
+            <h6 class="chart-caption">Users</h6>
+          </div>
+          <div class="sla_metrics" *ngIf="statusData.length>0">
+            <des-donut
+              [datum]="statusData"
+              [graphWidth]="150"
+              [showLegend]="false"
+              [innerRadius]="0"
+              [textOnPie]="false"
+              [sectionGap]="0.01"
+              [showTooltip]="true"
+              [colors]="pieChartColor">
+            </des-donut>
+            <h6 class="chart-caption">Status</h6>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mdl-grid  mdl-padded--adjustment">
+    <div class="mdl-cell mdl-cell--12-col mdl-cell--12-col-tablet mdl-color--white">
+      <div class="mdl-cell mdl-cell--2-col pull-right filter">
+        <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Search"/>
+      </div>
+      <table mat-table matSort [dataSource]="dataSource" class="mat-elevation-z0 data-table"
+             style="width:100%">
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> Status</th>
+          <td mat-cell *matCellDef="let element">
+            <i matTooltip="{{element.status | initcap}}" class="fa"
+               ngClass="{{statusIcons[element.status]}}" aria-hidden="true"></i>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="applicationId">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> Application id</th>
+          <td mat-cell *matCellDef="let element">
+            <a *ngIf="element.applicationAttemptId"
+              [routerLink]="['/application', element.applicationId + '_' + element.applicationAttemptId]">{{element.applicationId}}</a>
+            <a *ngIf="!element.applicationAttemptId"
+               [routerLink]="['/application', element.applicationId]">{{element.applicationId}}</a>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="applicationName">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> Name</th>
+          <td mat-cell *matCellDef="let element"> {{element.applicationName}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="applicationUser">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> User</th>
+          <td mat-cell *matCellDef="let element"> {{element.applicationUser}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="queue">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> Queue</th>
+          <td mat-cell *matCellDef="let element"> {{element.queue}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="submitTime">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> Submit time</th>
+          <td mat-cell *matCellDef="let element">
+            {{element.submitTime | amDateFormat:'MMMM Do YYYY, h:mm:ss a'}}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="finishTime">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> Finish time</th>
+          <td mat-cell *matCellDef="let element">
+            <span *ngIf="element.finishTime !== -1">
+              {{element.finishTime | amDateFormat:'MMMM Do YYYY, h:mm:ss a'}}
+            </span>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+      <mat-paginator [pageSizeOptions]="[10, 25, 50]" showFirstLastButtons></mat-paginator>
+    </div>
+  </div>
+</div>

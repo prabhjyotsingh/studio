@@ -1,0 +1,7 @@
+[
+  {
+    "timestamp": 1552905903299,
+    "stageId": 6,
+    "info": "Data skew in stage 6, partition 30, because it\u0027s processing 112.8 MiB compared to 12.6 MiB for other partitions."
+  }
+]

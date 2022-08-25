@@ -1,0 +1,115 @@
+<!--
+  ~
+  ~  CLOUDERA DATAPLANE SERVICE AND ITS CONSTITUENT SERVICES
+  ~
+  ~  (c) 2016-2018 Cloudera, Inc. All rights reserved.
+  ~
+  ~  This code is provided to you pursuant to your written agreement with Cloudera, which may be the terms of the
+  ~  Affero General Public License version 3 (AGPLv3), or pursuant to a written agreement with a third party authorized
+  ~  to distribute this code.  If you do not have a written agreement with Cloudera or with an authorized and
+  ~  properly licensed third party, you do not have any rights to this code.
+  ~
+  ~  If this code is provided to you under the terms of the AGPLv3:
+  ~  (A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY KIND;
+  ~  (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT
+  ~    LIMITED TO IMPLIED WARRANTIES OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE;
+  ~  (C) CLOUDERA IS NOT LIABLE TO YOU, AND WILL NOT DEFEND, INDEMNIFY, OR HOLD YOU HARMLESS FOR ANY CLAIMS ARISING
+  ~    FROM OR RELATED TO THE CODE; AND
+  ~  (D) WITH RESPECT TO YOUR EXERCISE OF ANY RIGHTS GRANTED TO YOU FOR THE CODE, CLOUDERA IS NOT LIABLE FOR ANY
+  ~    DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, PUNITIVE OR CONSEQUENTIAL DAMAGES INCLUDING, BUT NOT LIMITED TO,
+  ~    DAMAGES RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF BUSINESS ADVANTAGE OR UNAVAILABILITY,
+  ~    OR LOSS OR CORRUPTION OF DATA.
+  ~
+  -->
+
+<div id="chartContainer" class="mdl-page__container">
+  <div class="mdl-sticky-top-dag" #stickyHeader *ngIf="appValidator(appServiceData)">
+    <div class="mdl-grid mdl-grid--nesting mdl-align--middle">
+      <div class="mdl-cell mdl-cell--9-col mdl-cell--9-col-tablet">
+        <des-app-info [appServiceData]="appServiceData"></des-app-info>
+      </div>
+      <div class="mdl-cell mdl-cell--3-col mdl-cell--3-col-tablet menu-bar">
+        <div class="mdl-text--right" *ngIf="appServiceData!==undefined">
+          <button mat-flat-button [matMenuTriggerFor]="view" class="btn-action">
+            <i class="fa fa-file-image-o fa-fw"></i> View <i class="fa fa-caret-down fa-fw"></i>
+          </button>
+          <mat-menu #view="matMenu">
+            <button mat-menu-item [routerLink]="['/application', appId, 'config']"  class="sub-btn-action">Config</button>
+            <!--<button mat-menu-item [routerLink]="['/failed-task', appId]">Failed Task</button>-->
+            <button mat-menu-item [matMenuTriggerFor]="sql"  class="sub-btn-action">SQL Queries</button>
+          </mat-menu>
+          <mat-menu #sql="matMenu">
+            <button mat-menu-item *ngFor="let planId of sqlPlanIds" [routerLink]="['/application', appId, 'sql-view', planId]"  class="sub-btn-action">
+              <span>Execution {{planId}}</span>
+            </button>
+            <button mat-menu-item disabled *ngIf="!sqlPlanIds"  class="sub-btn-action">
+              Query plan not available
+            </button>
+          </mat-menu>
+
+          <button *ngIf="analysisState!=='COMPLETED'"
+                  mat-flat-button [matMenuTriggerFor]="actions"  class="btn-action">
+            Actions <i class="fa fa-caret-down fa-fw"></i>
+          </button>
+          <mat-menu #actions="matMenu" class="run_analysis_menu">
+            <i *ngIf="analysisState==='FAILED'"
+               matTooltip="{{analysisFailedMessageTooltip}}"
+               [matTooltipPosition]="'left'"
+               (click)="showFailedMessage()"
+               class="fa fa-exclamation-circle fa-fw"></i>
+            <button mat-menu-item (click)="runAnalysis()"
+               class="btn-action "
+               [ngClass]="{'btn-full-width': analysisState!=='FAILED'}"
+               [disabled]="analysisState==='IN_PROGRESS' || appServiceData.finalApplicationStatus === undefined"> Run Analysis</button>
+          </mat-menu>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mdl-dag"
+    [attr.data-chart]="'stageInformation'">
+    <des-dag-ui class="mdl-grid mdl-dag--adjustment" id="dagUI" #dagComp
+                [appServiceData]="appServiceData"
+                [xAxisTick]="xAxisTick"
+                [xDomain]="xDomain"
+                [analysisState]="analysisState"
+                (scaleExtentEvent)="onScaleExtentEvent($event)">
+    </des-dag-ui>
+  </div>
+
+  <div class="linechart-container">
+    <div class="chart-display-control" *ngIf="lineChartsData.length > 0">
+      <button mat-icon-button [matMenuTriggerFor]="menu">
+        <mat-icon matTooltip="Customize chart display" class="fa fa-ellipsis-v fa-lg"></mat-icon>
+      </button>
+      <mat-menu #menu="matMenu">
+        <button mat-menu-item *ngFor="let chartData of lineChartsData;" (click)="$event.stopPropagation()">
+          <mat-checkbox [(ngModel)]="chartData.visibility">{{chartData.label}}</mat-checkbox>
+        </button>
+      </mat-menu>
+    </div>
+    <div class="mdl-grid mdl-linechart--adjustment"
+         *ngFor="let data of lineChartsData; let i = index"
+         [attr.data-chart]="data.name">
+      <div class="mdl-cell mdl-cell--12-col mdl-cell--12-col-tablet mdl-color--white">
+        <des-line-chart
+          class="line-chart"
+          [hidden]="!data.visibility"
+          [title]="data.name"
+          [scaleExt]="scaleExtent"
+          [xAxisTk]="xAxisTick"
+          [data]="data.data"
+          [showLegend]="true"
+          [showTooltip]="true"
+          [zoomValue]="zoomTransform"
+          [colors]="colors"
+          [dagViewWidth]="width"
+          [graphUnit]="data.graphUnit"
+          [combineBarChart]="data.combineBarFields"
+          [xDomain]="xDomain"
+        ></des-line-chart>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,113 @@
+<!--
+  ~
+  ~  CLOUDERA DATAPLANE SERVICE AND ITS CONSTITUENT SERVICES
+  ~
+  ~  (c) 2016-2018 Cloudera, Inc. All rights reserved.
+  ~
+  ~  This code is provided to you pursuant to your written agreement with Cloudera, which may be the terms of the
+  ~  Affero General Public License version 3 (AGPLv3), or pursuant to a written agreement with a third party authorized
+  ~  to distribute this code.  If you do not have a written agreement with Cloudera or with an authorized and
+  ~  properly licensed third party, you do not have any rights to this code.
+  ~
+  ~  If this code is provided to you under the terms of the AGPLv3:
+  ~  (A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY KIND;
+  ~  (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT
+  ~    LIMITED TO IMPLIED WARRANTIES OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE;
+  ~  (C) CLOUDERA IS NOT LIABLE TO YOU, AND WILL NOT DEFEND, INDEMNIFY, OR HOLD YOU HARMLESS FOR ANY CLAIMS ARISING
+  ~    FROM OR RELATED TO THE CODE; AND
+  ~  (D) WITH RESPECT TO YOUR EXERCISE OF ANY RIGHTS GRANTED TO YOU FOR THE CODE, CLOUDERA IS NOT LIABLE FOR ANY
+  ~    DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, PUNITIVE OR CONSEQUENTIAL DAMAGES INCLUDING, BUT NOT LIMITED TO,
+  ~    DAMAGES RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF BUSINESS ADVANTAGE OR UNAVAILABILITY,
+  ~    OR LOSS OR CORRUPTION OF DATA.
+  ~
+  -->
+
+<div class="mdl-page__container">
+  <div class="mdl-grid" #tabView>
+    <div class="mdl-cell mdl-cell--12-col">
+      <mat-tab-group animationDuration="0ms" [dynamicHeight] (selectedTabChange)="selectedTabChangeHandler($event)"
+                     [selectedIndex]="tab">
+        <mat-tab label="Overview">
+          <ng-template matTabContent>
+            <div class="mdl-grid  mdl-padded--adjustment mdl-color--white">
+              <des-outlier-tasks [tableData]="tableData"></des-outlier-tasks>
+            </div>
+            <div class="stage-info" *ngIf="activeTab === 0">
+              <des-stage-info [sqlPlanUpdates]="sqlPlanUpdates"
+                              [selectedStage]="selectedStage"
+                              [stageAnlaysis]="true">
+              </des-stage-info>
+            </div>
+          </ng-template>
+        </mat-tab>
+        <mat-tab label="Cpu">
+          <ng-template matTabContent>
+            <div class="mdl-grid  mdl-padded--adjustment mdl-color--white">
+              <des-outlier-tasks [tableData]="tableData"
+                                 [filterAnomalyType]="['Executor cpu time','Task executor run time']"
+                                 (selectedOutlierTasks)="checkBoxClicked($event)"></des-outlier-tasks>
+            </div>
+            <div class="mdl-grid  mdl-padded--adjustment mdl-color--white"
+                 [ngStyle]="{marginTop: '16px'}">
+              <div class="mdl-cell mdl-cell--12-col mdl-cell--12-col-tablet">
+                <h5 class="base-caption">Cpu usage</h5>
+                <div class="mdl-grid mdl-children--flexend">
+                  <div *ngFor="let item of flameCardSetting | keyvalue;index as i;"
+                       class="mdl-cell {{item['value']['klass']}}">
+                    <div
+                      class="flame-chart-card mdl-card mdl-shadow--2dp width-auto  {{item['value']['heightKlass']}}">
+                      <div class="mdl-card__title">
+                        <des-flame-chart [svgMap]="svgApiMap[item.value.taskId]"></des-flame-chart>
+                      </div>
+                      <div class="mdl-card__menu">
+                        <mat-menu #rootMenu="matMenu" xPosition="after">
+                          <button mat-menu-item [matMenuTriggerFor]="subMenu" class="btn-action">Width</button>
+                        </mat-menu>
+
+                        <mat-menu #subMenu="matMenu">
+                          <button mat-menu-item *ngFor="let width of [1,2,3,4,5,6,7,8,9,10,11,12]"
+                                  data-id="{{i}}"
+                                  value="mdl-cell--{{width}}-col"
+                                  (click)="onFlameChartCardWidthChange($event)">{{width}}
+                          </button>
+                        </mat-menu>
+
+                        <button mat-icon-button [matMenuTriggerFor]="rootMenu">
+                          <mat-icon class="fa fa-ellipsis-v fa-lg"></mat-icon>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ng-template>
+        </mat-tab>
+        <mat-tab label="Io">
+          <ng-template matTabContent>
+            <div class="mdl-grid  mdl-padded--adjustment mdl-color--white">
+              <div class="mdl-cell mdl-cell--12-col mdl-cell--12-col-tablet">
+                <div class="linechart-container mdl-color--white" *ngIf="activeTab === 2">
+                  <h6 class="mdl-title-io mdl-padding-adjust">IO DETAILS</h6>
+                  <div class="mdl-grid mdl-linechart--margin mdl-grid--nesting"
+                       *ngFor="let data of partitionLineChartData;" [attr.data-chart]="data.name">
+                    <div class="mdl-cell mdl-cell--12-col mdl-cell--12-col-tablet">
+                      <des-scatter
+                        [title]="data.name"
+                        [data]="data.data"
+                        [graphUnit]="data.graphUnit"
+                        [showTooltip]="true"
+                        [dagViewWidth]="width-100"
+                        [showLegend]="true">
+                      </des-scatter>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ng-template>
+        </mat-tab>
+      </mat-tab-group>
+    </div>
+  </div>
+</div>
